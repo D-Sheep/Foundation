@@ -7,15 +7,11 @@
  */
 
 /**
- * Description of Test
+ * Description of Helper
  *
  * @author kamilhurajt
  */
 namespace Storyous;
 
-class Test {
-    //put your code here
-    public function test(){
-        echo "Working bets";
-    }
+abstract class Helper {
 }

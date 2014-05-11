@@ -7,15 +7,12 @@
  */
 
 /**
- * Description of Test
+ * Description of Exception
  *
  * @author kamilhurajt
  */
-namespace Storyous;
+namespace Storyous\Helper;
 
-class Test {
+class Exception extends \Storyous\Exception {
     //put your code here
-    public function test(){
-        echo "Working bets";
-    }
 }
