@@ -6,12 +6,15 @@
  * and open the template in the editor.
  */
 
+
 /**
- * Description of Helper
+ * Description of Abstract
  *
  * @author kamilhurajt
  */
-namespace Storyous;
 
-abstract class Helper {
+namespace Foundation\Db;
+
+abstract class Adapter extends \Phalcon\Db\Adapter {
+    //put your code here
 }

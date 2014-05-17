@@ -7,13 +7,13 @@
  */
 
 /**
- * Description of MySql
+ * Description of Exception
  *
  * @author kamilhurajt
  */
 
-namespace Storyous\Db\Adapter\Pdo;
-
-class Mysql extends \Phalcon\Db\Adapter\Pdo\Mysql {
+namespace Foundation\Config;
+//$config = new \Phalcon\Config\Adapter\Json($filePath)
+class Exception extends \Foundation\Exception {
     //put your code here
 }

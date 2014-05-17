@@ -6,15 +6,16 @@
  * and open the template in the editor.
  */
 
-
 /**
- * Description of Abstract
+ * Description of Test
  *
  * @author kamilhurajt
  */
+namespace Foundation;
 
-namespace Storyous\Db\Adapter;
-
-abstract class Pdo extends \Phalcon\Db\Adapter\Pdo {
+class Test {
     //put your code here
+    public function test(){
+        echo "Working bets";
+    }
 }

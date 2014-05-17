@@ -11,14 +11,14 @@
  *
  * @author kamilhurajt
  */
-use Storyous\Db\Adapter\Pdo;
+namespace Foundation;
 
-namespace Storyous;
+use Foundation\Db\Adapter\Pdo;
 
 class Db {
     /**
      * @param String $adapter adapter name ( Mysql )
-     * @return \Storyout\Db\Adapter\Pdo PDO connection
+     * @return \Foundation\Db\Adapter\Pdo PDO connection
      */
     public static function factory($adapter,array $config){
         if(class_exists($adapter)){

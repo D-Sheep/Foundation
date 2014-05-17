@@ -12,7 +12,7 @@
  * @author kamilhurajt
  */
 
-namespace Storyous;
+namespace Foundation;
 
 class Exception extends \Phalcon\Exception {
     /**

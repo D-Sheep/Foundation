@@ -12,9 +12,9 @@
  * @author kamilhurajt
  */
 
-namespace Storyous\Helper;
+namespace Foundation\Helper;
 
-class Application extends \Storyous\Helper {
+class Application extends \Foundation\Helper {
     /**
      * @var \Phalcon\Config
      */
@@ -51,7 +51,7 @@ class Application extends \Storyous\Helper {
             $this->application->registerModules($modules);
         }
         catch(Exception $e){
-            throw new \Storyous\Helper\Exception($e->getMessage(), $e->getCode());
+            throw new \Foundation\Helper\Exception($e->getMessage(), $e->getCode());
         }
     }
 

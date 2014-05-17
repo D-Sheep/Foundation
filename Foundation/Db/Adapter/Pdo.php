@@ -6,14 +6,15 @@
  * and open the template in the editor.
  */
 
+
 /**
- * Description of Lang
+ * Description of Abstract
  *
  * @author kamilhurajt
  */
 
-namespace Storyous\Router;
+namespace Foundation\Db\Adapter;
 
-class Lang extends \Storyous\Router {
+abstract class Pdo extends \Phalcon\Db\Adapter\Pdo {
     //put your code here
 }

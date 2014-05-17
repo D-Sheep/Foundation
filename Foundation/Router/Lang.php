@@ -7,12 +7,13 @@
  */
 
 /**
- * Description of Router
+ * Description of Lang
  *
  * @author kamilhurajt
  */
-namespace Storyous;
 
-abstract class Router extends \Phalcon\Mvc\Router {
-    
+namespace Foundation\Router;
+
+class Lang extends \Foundation\Router {
+    //put your code here
 }

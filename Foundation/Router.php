@@ -6,15 +6,13 @@
  * and open the template in the editor.
  */
 
-
 /**
- * Description of Abstract
+ * Description of Router
  *
  * @author kamilhurajt
  */
+namespace Foundation;
 
-namespace Storyous\Db;
-
-abstract class Adapter extends \Phalcon\Db\Adapter {
-    //put your code here
+abstract class Router extends \Phalcon\Mvc\Router {
+    
 }

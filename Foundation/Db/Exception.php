@@ -11,9 +11,9 @@
  *
  * @author kamilhurajt
  */
-use Storyous;
+use Foundation;
 
-namespace Storyous\Db;
+namespace Foundation\Db;
 
 class Exception extends Storyous\Exception {
 

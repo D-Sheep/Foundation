@@ -7,12 +7,12 @@
  */
 
 /**
- * Description of Rest
+ * Description of Exception
  *
  * @author kamilhurajt
  */
-namespace Storyous\Router;
+namespace Foundation\Router;
 
-class Rest extends \Storyous\Router {
+class Exception extends \Foundation\Exception {
     //put your code here
 }

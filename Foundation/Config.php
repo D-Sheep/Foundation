@@ -12,7 +12,7 @@
  * @author kamilhurajt
  */
 
-namespace Storyous;
+namespace Foundation;
 
 class Config {
     const ADAPTER_JSON = 'json';

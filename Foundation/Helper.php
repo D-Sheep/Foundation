@@ -7,14 +7,11 @@
  */
 
 /**
- * Description of Exception
+ * Description of Helper
  *
  * @author kamilhurajt
  */
+namespace Foundation;
 
-namespace Storyous\Model;
-
-
-class Exception extends \Storyous\Exception {
-    //put your code here
+abstract class Helper {
 }

@@ -11,8 +11,10 @@
  *
  * @author kamilhurajt
  */
-namespace Storyous\Helper;
 
-class Exception extends \Storyous\Exception {
+namespace Foundation\Model;
+
+
+class Exception extends \Foundation\Exception {
     //put your code here
 }

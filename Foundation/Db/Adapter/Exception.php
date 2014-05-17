@@ -12,8 +12,8 @@
  * @author kamilhurajt
  */
 
-namespace Storyous\Db\Adapter;
+namespace Foundation\Db\Adapter;
 
-class Exception extends \Storyous\Db\Exception {
+class Exception extends \Foundation\Db\Exception {
     //put your code here
 }

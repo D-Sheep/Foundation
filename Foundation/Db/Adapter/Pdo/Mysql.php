@@ -7,15 +7,13 @@
  */
 
 /**
- * Description of Test
+ * Description of MySql
  *
  * @author kamilhurajt
  */
-namespace Storyous;
 
-class Test {
+namespace Foundation\Db\Adapter\Pdo;
+
+class Mysql extends \Phalcon\Db\Adapter\Pdo\Mysql {
     //put your code here
-    public function test(){
-        echo "Working bets";
-    }
 }

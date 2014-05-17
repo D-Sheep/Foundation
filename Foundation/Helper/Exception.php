@@ -11,9 +11,8 @@
  *
  * @author kamilhurajt
  */
+namespace Foundation\Helper;
 
-namespace Storyous\Config;
-//$config = new \Phalcon\Config\Adapter\Json($filePath)
-class Exception extends \Storyous\Exception {
+class Exception extends \Foundation\Exception {
     //put your code here
 }
