@@ -13,7 +13,13 @@
  */
 
 namespace Foundation\Config;
-//$config = new \Phalcon\Config\Adapter\Json($filePath)
-class Exception extends \Foundation\Exception {
+
+use \Foundation\Exception;
+
+/**
+ * Class Exception
+ * @package Foundation\Config
+ */
+class ConfigException extends Exception {
     //put your code here
 }

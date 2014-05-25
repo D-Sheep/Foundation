@@ -14,6 +14,6 @@
 
 namespace Foundation\Router;
 
-class Lang extends \Foundation\Router {
+class Lang extends Router {
     //put your code here
 }
