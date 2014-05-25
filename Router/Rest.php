@@ -13,6 +13,6 @@
  */
 namespace Foundation\Router;
 
-class Rest extends \Foundation\Router {
+class Rest extends Router {
     //put your code here
 }
