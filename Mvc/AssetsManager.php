@@ -40,14 +40,20 @@ class AssetsManager {
 
         $basePath = $url->getBasePath();
 
-        $collection->setTargetPath(WWW_DIR . '/webloader/general.css')
-            ->setTargetUri('webloader/general.css')
-            ->addCss($basePath . 'bootstrap/bootstrap.less')
-            ->addCss($basePath . 'css/screen.css')
-            ->addCss($basePath . 'css/style.css')
-            ->addFilter(new LessFilter())
-            ->addFilter(new Cssmin())
-            ->join(true);
+        $filename = WWW_DIR . '/webloader/general.css';
+
+        if (!file_exists($filename)) {
+            $collection->setTargetPath($filename)
+                ->setTargetUri('webloader/general.css')
+                ->addCss($basePath . 'bootstrap/bootstrap.less')
+                ->addCss($basePath . 'css/screen.css')
+                ->addCss($basePath . 'css/style.css')
+                ->addFilter(new LessFilter())
+                ->addFilter(new Cssmin())
+                ->join(true);
+        } else {
+            $collection->addCss($basePath . 'webloader/general.css');
+        }
 
 
         $footer = $this->manager->collection(self::ASSETS_COLLECTION_FOOTER);
