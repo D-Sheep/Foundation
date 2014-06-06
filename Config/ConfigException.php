@@ -9,7 +9,7 @@
 /**
  * Description of Exception
  *
- * @author kamilhurajt
+ *
  */
 
 namespace Foundation\Config;

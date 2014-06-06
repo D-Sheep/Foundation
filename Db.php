@@ -9,7 +9,7 @@
 /**
  * Description of Db
  *
- * @author kamilhurajt
+ *
  */
 namespace Foundation;
 

@@ -9,7 +9,7 @@
 /**
  * Description of Router
  *
- * @author kamilhurajt
+ *
  */
 namespace Foundation\Router;
 

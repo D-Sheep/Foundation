@@ -9,7 +9,7 @@
 /**
  * Description of Rest
  *
- * @author kamilhurajt
+ *
  */
 namespace Foundation\Router;
 

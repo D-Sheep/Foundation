@@ -9,7 +9,7 @@
 /**
  * Description of MySql
  *
- * @author kamilhurajt
+ *
  */
 
 namespace Foundation\Db\Adapter\Pdo;

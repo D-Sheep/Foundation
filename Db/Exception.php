@@ -9,12 +9,11 @@
 /**
  * Description of Exception
  *
- * @author kamilhurajt
+ *
  */
-use Foundation;
 
 namespace Foundation\Db;
 
-class Exception extends Storyous\Exception {
+class Exception extends \Foundation\Exception {
 
 }

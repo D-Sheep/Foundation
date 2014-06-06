@@ -10,7 +10,7 @@
 /**
  * Description of Abstract
  *
- * @author kamilhurajt
+ *
  */
 
 namespace Foundation\Db;

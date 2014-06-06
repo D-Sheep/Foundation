@@ -9,7 +9,7 @@
 /**
  * Description of Application
  *
- * @author kamilhurajt
+ *
  */
 
 namespace Foundation\Helper;

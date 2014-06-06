@@ -9,7 +9,7 @@
 /**
  * Description of Lang
  *
- * @author kamilhurajt
+ *
  */
 
 namespace Foundation\Router;
