@@ -10,7 +10,11 @@
  * Licensed under MIT or GPLv3, see LICENSE
  */
 
+
 namespace Foundation\Helper\Css;
+
+use Foundation\Helper\Exception;
+
 /**
  * The less compiler and parser.
  *

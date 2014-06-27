@@ -27,24 +27,24 @@ class Controller extends \Phalcon\Mvc\Controller {
     /**
      * @var AssetsManager
      */
-    private $_assets;
+    //private $_assets;
 
     protected function initialize() {
 
-        $this->getAssets()->initialize($this);
+        //$this->getAssets()->initialize($this);
         // {{ assets.outputCss('header') }}
     }
 
     /**
      * @return AssetsManager
      */
-    public function getAssets()
+    /*public function getAssets()
     {
         if ($this->_assets === null) {
             $this->_assets = new AssetsManager($this->getDi()->getAssets());
         }
         return $this->_assets;
-    }
+    }*/
 
 
 

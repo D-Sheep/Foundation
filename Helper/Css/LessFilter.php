@@ -15,16 +15,21 @@ use Phalcon\Crypt\Exception;
 
 class LessFilter implements FilterInterface {
 
+    private $path;
+
+    public function __construct($path){
+        $this->path = $path;
+    }
+
     /**
      * Filters the content returning a string with the filtered content
      *
      * @param string $content
      * @return $content
      */
-    public function filter($content)
-    {
+    public function filter($content){
         $les = new Lessc();
-        $les->addImportDir(WWW_DIR . '/bootstrap');
+        $les->addImportDir($this->path . '/bootstrap');
         return $les->compile($content);
     }
 
