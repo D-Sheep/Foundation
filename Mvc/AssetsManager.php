@@ -242,7 +242,7 @@ class AssetsManager {
     }
 
     private function getFilename($foldername){
-        return 'general' . hash('adler32', $foldername);
+        return 'general' . hash('fnv164', $foldername);
     }
 
     public  function getCss(){
