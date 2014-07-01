@@ -12,19 +12,13 @@ use Foundation\Mvc\AssetsManager,
     Phalcon\Assets;
 
 class RenderListener {
+    private $di;
 
-    /** @var AssetsManager */
-    private $assetManager;
-
-    /** @var Assets */
-    private $assets;
-
-    public function __construct($assetManger, $assets){
-        $this->assetManager = $assetManger;
-        $this->assets = $assets;
+    public function __construct($di){
+        $this->di = $di;
     }
 
     public function beforeRender(){
-        $this->assetManager->initialize($this->assets);
+        $this->di->get('assetManager')->initialize($this->di->get('assets'));
     }
 }

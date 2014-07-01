@@ -146,7 +146,7 @@ class AssetsManager {
         $name = $this->getFilename($cacheName) . '.' . $suffix;
         $collection
             ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/" . $name)
-            ->setTargetUri( $this->destinationFolder . "/" . $name)
+            ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash())
             ->join(true);
         if($suffix== "css"){
             $this->generateContent($collection, $this->css->getFolders(),
@@ -165,7 +165,7 @@ class AssetsManager {
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
         $collection->addFilter(new LessFilter("css"))
             ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
-            ->setTargetUri( $this->destinationFolder . "/general.css")
+            ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash())
             ->addFilter(new Cssmin())
             ->join(true);
         $this->generateContent($collection, $this->css->getFolders(),
@@ -231,6 +231,10 @@ class AssetsManager {
             $this->cache->setCache("jsfiles", $files);
         }*/
         return $collection;
+    }
+
+    private function getTimeHash(){
+        return '?t='.time();
     }
 
     private function applyFilters($collection, $filters){
