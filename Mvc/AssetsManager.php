@@ -163,7 +163,7 @@ class AssetsManager {
 
         //css
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
-        $collection->addFilter(new LessFilter( "css"))
+        $collection->addFilter(new LessFilter("css"))
             ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
             ->setTargetUri( $this->destinationFolder . "/general.css")
             ->addFilter(new Cssmin())
@@ -198,9 +198,9 @@ class AssetsManager {
             while (sizeof($subfolders)>0){
                 $folderPath = array_pop($subfolders);
                 if (is_file($folderPath)){
-                    if ($css) {
+                    if ($css && preg_match('/\.(css|less)$/', $folderPath)) {
                         $collection->addCss($folderPath);
-                    } else { //js
+                    } else if (!$css && preg_match('/\.js$/', $folderPath)) { //js
                         $collection->addJs($folderPath);
                     }
                     //$files[] = $folderPath;
@@ -211,9 +211,9 @@ class AssetsManager {
                         }
                         $file  = $folderPath  . "/" . $file;
                         if (is_file($file)){
-                            if ($css) {
+                            if ($css && preg_match('/\.(css|less)$/', $file)) {
                                 $collection->addCss($file);
-                            } else { //js
+                            } else if (!$css && preg_match('/\.js$/', $file)) { //js
                                 $collection->addJs($file);
                             }
                             //$files[] = $file;
