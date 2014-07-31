@@ -1,5 +1,6 @@
 {
     "name": "storyous/foundation",
+    "version": "0.1",
     "authors": [
         {
             "name": "David Menger",
@@ -8,5 +9,10 @@
     ],
     "require": {
 
+    },
+    "autoload": {
+        "psr-4": {
+            "Foundation\\": ""
+        }
     }
 }
