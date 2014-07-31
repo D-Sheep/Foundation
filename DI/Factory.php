@@ -16,9 +16,6 @@ use Phalcon\DI\FactoryDefault;
  * Class Factory
  * @package Foundation\DI
  *
- * @method \Foundation\Router\Router getRouter()
- * @method \Phalcon\Assets\Manager getAssets()
- * @method \Phalcon\Mvc\Url getUrl()
  */
 class Factory extends FactoryDefault {
 
