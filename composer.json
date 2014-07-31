@@ -1,0 +1,12 @@
+{
+    "name": "storyous/foundation",
+    "authors": [
+        {
+            "name": "David Menger",
+            "email": "david.menger@me.com"
+        }
+    ],
+    "require": {
+
+    }
+}
