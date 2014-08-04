@@ -60,7 +60,6 @@ class Router extends \Phalcon\Mvc\Router {
                 $scriptPath = substr($urlPath, 0, $i + 1);
             }
         }
-
         return $scriptPath;
     }
 

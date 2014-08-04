@@ -11,6 +11,6 @@ require 'Exception.php';
 require 'Config/ConfigException.php';
 require 'Config/Builder.php';
 require 'Config/Configurator.php';
-require 'Mvc/RenderListener.php';
+require 'Router/Router.php';
 
 const CACHE_MAX_LIFETIME = 518400;

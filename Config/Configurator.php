@@ -39,7 +39,10 @@ class Configurator {
         $this->testCache=$cacheTest;
 
         include $configPath . '/config.vars.php';
-        $BaseUrl = $_SERVER["HTTP_HOST"];
+        $BaseUrl = "localhost";
+        if (isset($_SERVER["HTTP_HOST"])) {
+            $BaseUrl = $_SERVER["HTTP_HOST"];
+        }
 
         if (!isset($environments[$BaseUrl] )) {
             throw new ConfigException("Cant detect Url");
