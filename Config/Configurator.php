@@ -29,6 +29,14 @@ class Configurator {
     /* @var boolean */
     private $testCache;
 
+    private $configTypes;
+
+    private $addresses;
+
+    private $environments;
+
+    protected $configPath;
+
     /**
      * Update config - detect mode and include subconfigs
      * @param String $configPath Source path to config files
@@ -36,18 +44,28 @@ class Configurator {
      * @param boolean $cacheTest indicates wheather use cachce or not
      */
     public function __construct($configPath, $cachePath, $cacheTest = false){
-        $this->testCache=$cacheTest;
+        $this->testCache = $cacheTest;
+        $this->configPath = $configPath;
 
-        include $configPath . '/config.vars.php';
-        $BaseUrl = $_SERVER["HTTP_HOST"];
 
-        if (!isset($environments[$BaseUrl] )) {
+        if (isset($_SERVER["HTTP_HOST"])) {
+            $baseUrl = $_SERVER["HTTP_HOST"];
+        } else {
+            $baseUrl = "localhost";
+        }
+
+        if (!isset($environments[$baseUrl] )) {
             throw new ConfigException("Cant detect Url");
         }
 
-        $this->mode = $environments[$BaseUrl];
+        $this->mode = $environments[$baseUrl];
 
-        $this->debug = $this->detectDebugMode($addresses);
+
+    }
+
+    public function initialize() {
+        $this->debug = $this->detectDebugMode();
+
         if ( strcmp($this->mode, Configurator::DEVELOPMENT==0)){
             if (!$this->debug) $this->debug = true;
             $this->development = true;
@@ -58,19 +76,18 @@ class Configurator {
         }
 
         if ($this->development && !$this->testCache){
-            $this->getConfig($configPath, $configTypes);
+            $this->getConfig($this->configPath, $this->configTypes);
         } else {
 
             $frontCache = new \Phalcon\Cache\Frontend\Data(array("lifetime" => CACHE_MAX_LIFETIME));
             $cache = new \Phalcon\Cache\Backend\File($frontCache,
-                            array('cacheDir' => $cachePath));
+                array('cacheDir' => $this->configPath));
 
             $this->config = $cache->get('config');
             if ($this->config === null){
-                $this->getConfig($configPath, $configTypes);
+                $this->getConfig($this->configPath, $this->configTypes);
                 $cache->save('config', $this->config);
             }
-
         }
     }
 
@@ -89,6 +106,7 @@ class Configurator {
      * @return bool
      */
     public function detectDebugMode($list = NULL){
+        $list = $list !== null ? $list : $this->addresses;
         $list = is_string($list) ? preg_split('#[,\s]+#', $list) : $list;
         $list[] = '127.0.0.1';
         $list[] = '::1';
@@ -114,4 +132,36 @@ class Configurator {
     public function isTestingCache(){
         return $this->testCache;
     }
+
+    public function setConfigTypes($configTypes)
+    {
+        $this->configTypes = $configTypes;
+    }
+
+    public function getConfigTypes()
+    {
+        return $this->configTypes;
+    }
+
+    public function setAddresses($addresses)
+    {
+        $this->addresses = $addresses;
+    }
+
+    public function getAddresses()
+    {
+        return $this->addresses;
+    }
+
+    public function setEnvironments($environments)
+    {
+        $this->environments = $environments;
+    }
+
+    public function getEnvironments()
+    {
+        return $this->environments;
+    }
+
+
 }
