@@ -1,0 +1,27 @@
+<?php
+/**
+ * Created by JetBrains PhpStorm.
+ * User: Kathy
+ * Date: 17/07/14
+ */
+
+namespace Foundation\Oauth;
+
+
+interface IOauthSignable {
+    public function getSignatureBaseString();
+    //public function getToken();
+    //public function getSignature();
+    public function isSigned();
+    //public function getConsumerKey();
+    //public function getSignatureMethod();
+    public function oauthurldecode ( $s );
+    public function oauthurlencode ( $s );
+    public function getParam($s, $urldecode = false );
+    public function getEnc($s);
+    public function get($s);
+    public function verifySignature ( Secrets $secrets, $token_type = OAuthService::TOKEN_TYPE_ACCESS );
+    public function getContentType ();
+    public function verifyDataSignature ( Secrets $secrets, $signature_method, $signature );
+    public function getRequestBody ();
+}

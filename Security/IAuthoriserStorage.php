@@ -8,6 +8,10 @@
 namespace Foundation\Security;
 
 
-interface IAuthorizatorStorage {
+interface IAuthoriserStorage {
     public function getAllPermissions();
+    public function createAccountResource($name);
+    public function findAccountResource($parameters);
+    public function createAccountGroupPermission(
+        $resource,$role, $access);
 }
