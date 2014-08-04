@@ -1,0 +1,11 @@
+{
+    "name": "storyous/foundation",
+    "version": "0.1",
+    "type": "phalcon-library",
+    "authors": [
+        {
+            "name": "David Menger",
+            "email": "david.menger@me.com"
+        }
+    ]
+}

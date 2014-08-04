@@ -31,20 +31,12 @@ class Controller extends \Phalcon\Mvc\Controller {
 
     protected function initialize() {
 
-        //$this->getAssets()->initialize($this);
-        // {{ assets.outputCss('header') }}
+        $this->getDi()->getEventsManager()->attach('view:beforeRender', $this);
     }
 
-    /**
-     * @return AssetsManager
-     */
-    /*public function getAssets()
-    {
-        if ($this->_assets === null) {
-            $this->_assets = new AssetsManager($this->getDi()->getAssets());
-        }
-        return $this->_assets;
-    }*/
+    protected function beforeRender() {
+        $this->view->basePath = $this->getDi()->getUrl()->getBasePath();
+    }
 
 
 
