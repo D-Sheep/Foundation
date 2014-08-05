@@ -118,7 +118,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
         }
     }
 
-    /* TODO je potřeba?
+    /* TODO je to potřeba?
     public function __call($name, $args) {
         parent::__call($name, $args);
     }*/
@@ -261,7 +261,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
      *
      * @return \Phalcon\DiInterface
      */
-    protected static function getContext() {
+    protected static function getDi() {
         return \Phalcon\DI::getDefault();
     }
 

@@ -45,7 +45,7 @@ class ProcessContext extends DataObject {
      * @return ProcessContext
      */
     public static function getById($id, $badRequestIfNotFound = false, array $validateParams = null) {
-        $session = static::getContext()->get('session')->get('processcontext');
+        $session = static::getDi()->getSession->get('processcontext');
 
         if (isset($session[$id])) {
             if ($validateParams && $validateParams) {
@@ -101,32 +101,37 @@ class ProcessContext extends DataObject {
     public static function create() {
         $obj = new ProcessContext();
         $obj->id = md5(str_repeat(microtime()."microsalt", 2));
-        $session = static::getContext()->get('session')->get('processcontext');
+        $session = static::getDi()->getSession()->get('processcontext');
         $session->setExpiration('+ 2 hours');
         $session[$obj->id] = $obj;
         return $obj;
     }
 
-    public function go(\Phalcon\Mvc\Controller $presenter = null) {
-        $presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
+    public function go() {
+        //$presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
         if ($this->callback) {
             $url = $this->callback;
             $this->callback = null;
+            $response = new \Phalcon\Http\Response();
 
-            if ($presenter->hasFlashSession()) {
+            /* kdyby se nepředávala flash zpráva od minula
+             * if ($presenter->hasFlashSession()) {
                 $sign = strpos($url, "?")===false?"?":"&";
                 $url .= $sign . \Nette\Application\UI\Presenter::FLASH_KEY . "=" .urlencode($presenter->getParameter(\Nette\Application\UI\Presenter::FLASH_KEY));
-            }
-
-            $presenter->redirectUrl($url);
+            }*/
+            //interni redirect
+            $response->redirect($url);
+            $response->send();
         }
     }
 
-    public function goLoginSignUp(\Nette\Application\UI\Presenter $presenter, $goBackToCurrentPage = false) {
+    public function goLoginSignUp($goBackToCurrentPage = false) {
         if ($goBackToCurrentPage) {
-            $this->setCallback($presenter->link('this', array('invalidate'=>true)));
+            $url = static::getDi()->getUrl();
+            $this->setCallback($url->get(array('for' => 'this', 'invalidate'=>true)));
         }
-        $presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
+        //TODO !!!
+        //$presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
     }
 
 
