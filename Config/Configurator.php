@@ -37,6 +37,8 @@ class Configurator {
 
     protected $configPath;
 
+    protected $cachePath;
+
     /**
      * Update config - detect mode and include subconfigs
      * @param String $configPath Source path to config files
@@ -46,6 +48,10 @@ class Configurator {
     public function __construct($configPath, $cachePath, $cacheTest = false){
         $this->testCache = $cacheTest;
         $this->configPath = $configPath;
+        $this->cachePath = $cachePath;
+    }
+
+    public function initialize() {
 
         if (isset($_SERVER["HTTP_HOST"])) {
             $baseUrl = $_SERVER["HTTP_HOST"];
@@ -58,11 +64,6 @@ class Configurator {
         }
 
         $this->mode = $this->environments[$baseUrl];
-
-
-    }
-
-    public function initialize() {
         $this->debug = $this->detectDebugMode();
 
         if ( strcmp($this->mode, Configurator::DEVELOPMENT==0)){
@@ -80,7 +81,7 @@ class Configurator {
 
             $frontCache = new \Phalcon\Cache\Frontend\Data(array("lifetime" => CACHE_MAX_LIFETIME));
             $cache = new \Phalcon\Cache\Backend\File($frontCache,
-                array('cacheDir' => $this->configPath));
+                array('cacheDir' => $this->cachePath));
 
             $this->config = $cache->get('config');
             if ($this->config === null){
