@@ -15,8 +15,7 @@ use Foundation\Cache\CacheFactory,
     Phalcon\Assets\Collection,
     Foundation\Helper\Css\LessFilter,
     Phalcon\Assets\Filters\Cssmin,
-    Phalcon\Assets\Filters\Jsmin,
-    Phalcon\Mvc\Url;
+    Phalcon\Assets\Filters\Jsmin;
 
 
 class AssetsManager {
