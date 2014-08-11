@@ -194,14 +194,11 @@ class AssetsManager {
         foreach ($folders as $folder){
             $folderPath = $path . $folder;
             $subfolders[] = $folderPath;
+            $array = [];
             while (sizeof($subfolders)>0){
                 $folderPath = array_pop($subfolders);
                 if (is_file($folderPath)){
-                    if ($css && preg_match('/\.(css|less)$/', $folderPath)) {
-                        $collection->addCss($folderPath);
-                    } else if (!$css && preg_match('/\.js$/', $folderPath)) { //js
-                        $collection->addJs($folderPath);
-                    }
+                    $array[] = $folderPath;
                     //$files[] = $folderPath;
                 } else if ($handle = opendir($folderPath)) {
                     while (false !== ($file = readdir($handle))) {
@@ -210,11 +207,7 @@ class AssetsManager {
                         }
                         $file  = $folderPath  . "/" . $file;
                         if (is_file($file)){
-                            if ($css && preg_match('/\.(css|less)$/', $file)) {
-                                $collection->addCss($file);
-                            } else if (!$css && preg_match('/\.js$/', $file)) { //js
-                                $collection->addJs($file);
-                            }
+                            $array[] = $file;
                             //$files[] = $file;
                         } else {
                             array_push($subfolders, $file);
@@ -223,7 +216,36 @@ class AssetsManager {
                     closedir($handle);
                 }
             }
+
+            usort($array, function($left, $right){
+                $m = null;
+                $n = null;
+                preg_match_all('/\//', $left, $m);
+                preg_match_all('/\//', $right, $n);
+                $slashCountLeft = count($m[0]);
+                $slashCountRight = count($n[0]);
+
+                if ($slashCountLeft == $slashCountRight) {
+                    $array = [$left, $right];
+                    sort($array);
+                    return $array[0] == $left ? - 1 : 1;
+                } else {
+                    return $slashCountLeft - $slashCountRight;
+                }
+            });
+
+            foreach($array as $item) {
+                if ($css && preg_match('/\.(css|less)$/', $item)) {
+                    $collection->addCss($item);
+                } else if (!$css && preg_match('/\.js$/', $item)) { //js
+                    $collection->addJs($item);
+                }
+            }
+
         }
+
+
+
         /*if($css){
             $this->cache->setCache("cssfiles", $files);
         } else {
