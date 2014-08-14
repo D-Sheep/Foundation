@@ -8,8 +8,8 @@
 namespace Foundation\Oauth;
 
 
-use Storyous\Account;
-use Storyous\OauthServerRegistry;
+use Storyous\Entities\Account;
+use Storyous\Entities\OauthServerRegistry;
 
 interface IOauthStore {
     // metody od story.us \Foundantion\Oauth\Store.php
@@ -24,7 +24,16 @@ interface IOauthStore {
     public function addConsumerRequestToken ( $consumer_key, $options = array() );
     public function generateSecret();
     public function generateKey ( $unique = false );
+
+    /**
+     * Upgrade a request token to be an authorized request token.
+     *
+     * @param string token
+     * @param int	 user_id  user authorizing the token
+     * @param string referrer_host used to set the referrer host for this token, for user feedback
+     */
     public function authorizeConsumerRequestToken ( $token, Account $account, $referrer_host = '' );
+
     public function deleteConsumerRequestToken ( $token );
     public function exchangeConsumerRequestForAccessToken ( $token, $options = array() );
     public function createAuthorizedAccessToken ( Account $account, OauthServerRegistry $app, $options = array() );

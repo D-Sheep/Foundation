@@ -8,6 +8,9 @@
 namespace Foundation\Oauth;
 
 
+use Foundation\Oauth\SignatureMethod\IStoreRequired;
+use Storyous\Oauth\OauthStore;
+
 class CryptMethodFactory {
     const HMAC_SHA1 = 'HMAC-SHA1';
     const MD5 = 'MD5';
@@ -23,12 +26,12 @@ class CryptMethodFactory {
 
     /**
      *
-     * @var \Foundation\Oauth\Store
+     * @var OauthStore
      */
     protected $store;
 
 
-    function __construct(Store $store) {
+    function __construct(OauthStore $store) {
         $this->store = $store;
     }
 
@@ -43,10 +46,14 @@ class CryptMethodFactory {
             throw new OauthException("Signature method ".$signature_method." is not supported");
         }
 
+        $path= APP_DIR."/library/Foundation/Oauth/SignatureMethod/".self::$methods[$signature_method].".php";
+
+        require $path;
+
         $string = "\\Foundation\\Oauth\\SignatureMethod\\".self::$methods[$signature_method];
-        $obj = new $string(); //TODO funguje?
-        //$obj = \Nette\Reflection\ClassType::from($string)->newInstanceArgs();
-        if ($obj instanceof SignatureMethod\IStoreRequired) {
+
+        $obj = new $string();
+        if ($obj instanceof IStoreRequired) {
             $obj->setStore($this->store);
         }
         return $obj;

@@ -33,6 +33,7 @@
 
 namespace Foundation\Oauth\SignatureMethod;
 
+use Foundation\Oauth\OauthException;
 use Foundation\Oauth\Secrets, Foundation\Oauth\IOauthSignable;
 
 class HMAC_SHA1 implements IOAuthSignatureMethod
@@ -100,6 +101,8 @@ class HMAC_SHA1 implements IOAuthSignatureMethod
 		// We have to compare the decoded values
 		$valA  = base64_decode($a);
 		$valB  = base64_decode($b);
+
+        //throw new OauthException($request->getSignatureBaseString());
 
 		// Crude binary comparison
 		return rawurlencode($valA) == rawurlencode($valB);

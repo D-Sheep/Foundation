@@ -11,6 +11,7 @@ namespace Foundation\Utils;
 
 use Foundation\BadRequestException;
 use Foundation\DataObject;
+use Phalcon\Http\Response;
 
 class ProcessContext extends DataObject {
 
@@ -130,7 +131,10 @@ class ProcessContext extends DataObject {
             $url = static::getDi()->getUrl();
             $this->setCallback($url->get(array('for' => 'this', 'invalidate'=>true)));
         }
-        //TODO !!!
+
+        $r = new Response();
+        $r->redirect();
+        return $r; //TODO !!! kam mě to asi pošle?
         //$presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
     }
 

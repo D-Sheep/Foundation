@@ -8,18 +8,18 @@
 namespace Foundation\Mvc;
 
 
+use Foundation\Oauth\CryptMethodFactory;
 use Foundation\Oauth\HttpRequestVarifier;
 use Foundation\Oauth\OAuthService;
 use Foundation\Oauth\Secrets;
 use Foundation\Security\Authenticator;
 use Foundation\Security\Authoriser;
 use Nette\Security\User;
+use Phalcon\Http\Request;
 use Phalcon\Mvc\Controller;
-use Storyous\Account;
+use Storyous\Entities\Account;
 use Storyous\Oauth\OauthStore;
-use Storyous\Person;
-use model\Security\AuthenticatorStorage;
-use model\Security\AuthoriserStorage;
+use Storyous\Entities\Person;
 
 class ApiController extends Controller {
 
@@ -28,6 +28,14 @@ class ApiController extends Controller {
     const ERR_BAD_INPUT = 402;
 
     private $isSigned;
+
+    public function initialize(){
+        $di = $this->getDI();
+        $di->set('oAuthService', function() use($di){
+            return new OAuthService($di->get('session'), $this->getHttpRequest(), $this->response,
+                $di->getOauthStore());
+        }, true);
+    }
 
     /**
      * @var User
@@ -93,7 +101,7 @@ class ApiController extends Controller {
 
     public function getHttpRequest(){
         if ($this->_request === null){
-            $this->_request = new HttpRequestVarifier($this->request);
+            $this->_request = new HttpRequestVarifier($this->di->getRequest(), new CryptMethodFactory($this->di->getOauthStore()));
         }
         return $this->_request;
     }
