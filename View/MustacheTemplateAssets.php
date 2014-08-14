@@ -47,6 +47,7 @@ class MustacheTemplateAssets {
         foreach ($this->getFiles() as $file) {
             /* @var $file \SplFileInfo */
             $dir = str_replace([$this->view->getViewsDir(), ".mustache"], ["", ""], $file->getRealPath());
+            $dir = strtolower($dir);
             $ex = explode("/", $dir);
             if (count($ex) === 2 && $ex[0] === $ex[1]) {
                 $dir = $ex[0] . "/default";

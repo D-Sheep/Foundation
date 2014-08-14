@@ -20,12 +20,16 @@ use Phalcon\Mvc\Controller;
 use Storyous\Entities\Account;
 use Storyous\Oauth\OauthStore;
 use Storyous\Entities\Person;
+use Storyous\Security\AuthenticatorStorage;
+use Storyous\Security\AuthoriserStorage;
 
 class ApiController extends Controller {
 
     const ERR_ACCESS_NOT_PERMITED = 401;
     const ERR_NOT_FOUND = 404;
     const ERR_BAD_INPUT = 402;
+
+
 
     private $isSigned;
 
@@ -48,7 +52,11 @@ class ApiController extends Controller {
 
     private $_request;
 
-    public $payLoad;
+    public $payload;
+
+    public function initialize() {
+        $this->payload = (object) [];
+    }
 
     /** @return User */
     public function getUser($forceSessionUser = FALSE){
@@ -118,5 +126,43 @@ class ApiController extends Controller {
             return false;
         }
         return $this->isSigned;
+    }
+
+    public function sendResponseOk() {
+        $this->payload->ok = 1;
+        $this->response
+            ->setContentType('application/json')
+            ->setJsonContent($this->payload)->send();
+    }
+
+    public function sendResponseError($code, $message = null) {
+
+        if ($message === null) {
+            $message = $this->translateCodeToMessage($code);
+        }
+
+        $this->payload->ok = 0;
+        $this->payload->error = $message;
+        $this->payload->code = $code;
+        $this->response
+            ->setStatusCode($code, $message)
+            ->setContentType('application/json')
+            ->setJsonContent($this->payload)->send();
+    }
+
+    protected function translateCodeToMessage($code) {
+        switch ($code) {
+            case self::ERR_NOT_FOUND:
+                return "Not found";
+
+            case self::ERR_BAD_INPUT:
+                return "Bad input";
+
+            case self::ERR_ACCESS_NOT_PERMITED:
+                return "Access not permitted";
+
+            default:
+                return "Server error";
+        }
     }
 }
