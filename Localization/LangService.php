@@ -41,12 +41,12 @@ class LangService {
         if ($this->_cachedLang === null) {
             if ($this->getLoggedIdentity() !== null) {
                 //@todo implement user language
-            } else if ($this->session->offsetGet(self::STORED_SESSION_LANG) === null) {
+            } else if ($this->session->get(self::STORED_SESSION_LANG) === null) {
                 $lang = $this->decideUserDefaultLanguage();
-                $this->session->offsetSet(self::STORED_SESSION_LANG, $lang);
+                $this->session->set(self::STORED_SESSION_LANG, $lang);
                 $this->_cachedLang =  $lang;
             } else {
-                $this->_cachedLang =  $this->session->offsetGet(self::STORED_SESSION_LANG);
+                $this->_cachedLang =  $this->session->get(self::STORED_SESSION_LANG);
             }
         }
         return $this->_cachedLang;
