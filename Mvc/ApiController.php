@@ -14,7 +14,7 @@ use Foundation\Oauth\OAuthService;
 use Foundation\Oauth\Secrets;
 use Foundation\Security\Authenticator;
 use Foundation\Security\Authoriser;
-use Nette\Security\User;
+use Nette\Security\Security\User;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Controller;
 use Storyous\Entities\Account;
@@ -29,17 +29,7 @@ class ApiController extends Controller {
     const ERR_NOT_FOUND = 404;
     const ERR_BAD_INPUT = 402;
 
-
-
     private $isSigned;
-
-    public function initialize(){
-        $di = $this->getDI();
-        $di->set('oAuthService', function() use($di){
-            return new OAuthService($di->get('session'), $this->getHttpRequest(), $this->response,
-                $di->getOauthStore());
-        }, true);
-    }
 
     /**
      * @var User
@@ -54,7 +44,12 @@ class ApiController extends Controller {
 
     public $payload;
 
-    public function initialize() {
+    public function initialize(){
+        $di = $this->getDI();
+        $di->set('oAuthService', function() use($di){
+            return new OAuthService($di->get('session'), $this->getHttpRequest(), $this->response,
+                $di->getOauthStore());
+        }, true);
         $this->payload = (object) [];
     }
 
@@ -76,7 +71,7 @@ class ApiController extends Controller {
                     \Foundation\Utils\Logger::log("oauth-getuser-error", $e->getMessage(), $this->getHttpRequest()->getAllParams());
                     $account = null;*/
                 }
-                 $this->_user = new \Nette\Security\User(
+                 $this->_user = new User(
                      new OauthStore($this->di->get('modelsManger')),
                      new OauthStore($this->di->get('authenticator')),
                      new OauthStore($this->di->get('authoriser'))

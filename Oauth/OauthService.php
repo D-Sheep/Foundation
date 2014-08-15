@@ -239,7 +239,7 @@ class OAuthService {
      *
      * TODO: add correct result code to exception
      *
-     * @return string 	returned request token, false on an error
+     * @return \Phalcon\Http\Response
      */
     public function requestToken () {
         try {
@@ -261,15 +261,16 @@ class OAuthService {
             $token  = $this->store->addConsumerRequestToken($this->request->getParam('oauth_consumer_key', true), $options);
             /** @var \Storyous\Entities\OauthServerToken $stoken */
 
-            $this->response->setContent(array(
-                "oauth_callback_confirmed"=> 1,
+            $content = array(
                 "oauth_token"=> $token->token,
-                "oauth_token_secret" => $token->token_secret
-            ));
+                "oauth_token_secret" => $token->token_secret,
+                "oauth_callback_confirmed"=> true
+            );
 
             if ($token['used_token_ttl']){
-                $this->response['xoauth_token_ttl'] = $token['used_token_ttl'];
+                $content['xoauth_token_ttl'] = $token['used_token_ttl'];
             }
+            $this->response->setContent(http_build_query($content));
 
             //$request_token = $token->token_ttl;
 
