@@ -52,7 +52,9 @@ class Mustache extends Engine implements EngineInterface
             $params['content'] = $this->_view->getContent();
         }
 
-        $content = $this->mustache->render($this->getCachedTemplate($path), $params);
+        $tplContent = $this->getCachedTemplate($path);
+
+        $content = $this->mustache->render($tplContent, $params);
 
         if ($mustClean) {
             $this->_view->setContent($content);
@@ -67,12 +69,32 @@ class Mustache extends Engine implements EngineInterface
      * @param $path
      * @return mixed
      */
-    public function getCachedTemplate($path) {
-        return preg_replace('/[\s]+/', ' ', file_get_contents($path));
+    public function getCachedTemplate($path, $stache = false) {
+        $res = preg_replace('/[\s]+/', ' ', file_get_contents($path));;
+
+        if (!$stache) {
+            $res = $this->callback($res);
+            /*if (preg_match("|{{#each|", $t)) {
+                echo "<pre>";
+                echo htmlspecialchars($res);
+                exit();
+            }*/
+        }
+
+        return $res;
     }
 
-    public function getPartial($path) {
-        return $this->mustache->getPartialsLoader()->load($path);
+    public function callback($str) {
+        if (is_array($str)) {
+            $str = "{{# ".$str[1]."}}".$str[2]."{{/".$str[1]."}}";
+        }
+        return preg_replace_callback("|{{\s?#each ([^}]+)}}(.+)({{\s?/each\s?}})|i", [$this, "callback"], $str);
+    }
+
+
+
+    public function getPartial($path, $stache = false) {
+        return $this->mustache->getPartialsLoader()->load($path, $stache);
     }
 
 }

@@ -11,6 +11,7 @@ namespace Foundation\Image;
 
 
 use Foundation\Exception;
+use Phalcon\Http\Response;
 use Phalcon\Image\Adapter\Imagick;
 use Phalcon\Image as PhImg;
 
@@ -61,24 +62,81 @@ class Image extends Imagick {
     public function resize($width = null, $height = null, $flags = self::FIT) {
 
         if ($flags & self::EXACT) {
-            return $this->resize($width, $height, self::FILL)->crop('50%', '50%', $width, $height);
+            return $this->resize($width, $height, self::FILL)->cropImage('50%', '50%', $width, $height);
         }
 
         list($newWidth, $newHeight) = self::calculateSize($this->getWidth(), $this->getHeight(), $width, $height, $flags);
 
         if ($newWidth !== $this->getWidth() || $newHeight !== $this->getHeight()) {
-            $this->getImage()->resizeimage($newWidth, $newHeight, \Imagick::FILTER_CATROM, 1);
+            $this->_width = abs($newWidth);
+            $this->_height = abs($newHeight);
+            $this->getInternalImInstance()->resizeimage($newWidth, $newHeight, \Imagick::FILTER_CATROM, 1);
         }
 
+
         if ($width < 0) {
-            $this->flip(PhImg::HORIZONTAL);
+            $this->getInternalImInstance()->flipimage();
         }
 
         if ($height < 0) {
-            $this->flip(PhImg::VERTICAL);
+            $this->getInternalImInstance()->flopimage();
         }
 
         return $this;
+    }
+
+    /**
+     * @param $left
+     * @param $top
+     * @param $width
+     * @param $height
+     * @return $this
+     */
+    public function cropImage($left, $top, $width, $height) {
+
+        list($left, $top, $width, $height) = self::calculateCutout($this->getWidth(), $this->getHeight(), $left, $top, $width, $height);
+
+        $this->_width = $width;
+        $this->_height = $height;
+
+        $this->getInternalImInstance()->cropimage($width, $height, $left, $top);
+
+        return $this;
+    }
+
+    /**
+     * Calculates dimensions of cutout in image.
+     * @param  mixed  source width
+     * @param  mixed  source height
+     * @param  mixed  x-offset in pixels or percent
+     * @param  mixed  y-offset in pixels or percent
+     * @param  mixed  width in pixels or percent
+     * @param  mixed  height in pixels or percent
+     * @return array
+     */
+    public static function calculateCutout($srcWidth, $srcHeight, $left, $top, $newWidth, $newHeight)
+    {
+        if (substr($newWidth, -1) === '%') {
+            $newWidth = round($srcWidth / 100 * $newWidth);
+        }
+        if (substr($newHeight, -1) === '%') {
+            $newHeight = round($srcHeight / 100 * $newHeight);
+        }
+        if (substr($left, -1) === '%') {
+            $left = round(($srcWidth - $newWidth) / 100 * $left);
+        }
+        if (substr($top, -1) === '%') {
+            $top = round(($srcHeight - $newHeight) / 100 * $top);
+        }
+        if ($left < 0) {
+            $newWidth += $left; $left = 0;
+        }
+        if ($top < 0) {
+            $newHeight += $top; $top = 0;
+        }
+        $newWidth = min((int) $newWidth, $srcWidth - $left);
+        $newHeight = min((int) $newHeight, $srcHeight - $top);
+        return array($left, $top, $newWidth, $newHeight);
     }
 
     /**
@@ -148,6 +206,26 @@ class Image extends Imagick {
         }
 
         return array(max((int) $newWidth, 1), max((int) $newHeight, 1));
+    }
+
+    public function response(Response $response, $type, $quality = 90) {
+        if (is_string($type) && isset(self::$typesConv[$type])) {
+            $type = self::$typesConv[$type];
+        }
+
+        if ($type !== self::GIF && $type !== self::PNG && $type !== self::JPEG) {
+            throw new \InvalidArgumentException("Unsupported image type.");
+        }
+        if ($type) {
+            $this->getInternalImInstance()->setimageformat(self::$types[$type]);
+        }
+
+        if ($quality) {
+            $this->getInternalImInstance()->setcompressionquality($quality > 1 ? $quality : round($quality*100));
+        }
+        $response->setContentType(image_type_to_mime_type($type));
+        $response->setContent((string) $this->getInternalImInstance());
+        $response->send();
     }
 
 }

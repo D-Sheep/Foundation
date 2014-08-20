@@ -40,9 +40,9 @@ class MustachePartialsLoader implements \Mustache_Loader {
      *
      * @return string Mustache Template source
      */
-    public function load($name)
+    public function load($name, $stache = false)
     {
-        return $this->mustache->getCachedTemplate($this->viewsDir . $name . '.mustache');
+        return $this->mustache->getCachedTemplate($this->viewsDir . $name . '.mustache', $stache);
     }
 
 

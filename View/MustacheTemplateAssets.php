@@ -65,7 +65,7 @@ class MustacheTemplateAssets {
     }
 
     protected function getTemplateContents(\SplFileInfo $file) {
-        return $this->getMustache()->getCachedTemplate((string) $file);
+        return $this->getMustache()->getCachedTemplate((string) $file, true);
     }
 
     /**
