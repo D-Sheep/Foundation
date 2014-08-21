@@ -21,7 +21,11 @@ class Logger {
         EXCEPTION = 'exception',
         CRITICAL = 'critical';
 
-    public static function log($value, $priority = self::INFO){
+    public static function log($filename, $value, $priority = self::INFO){
+        if ($priority == self::DEBUG && !(\Phalcon\DI::getDefault()->getConfigurator()->isDebug())){
+            return;
+        }
+
         static::isDirectory();
 
         //$exceptionFile = $value instanceof \Exception ? self::logException($value) : NULL;
@@ -29,7 +33,7 @@ class Logger {
         //var_dump(debug_backtrace());
         $message = self::formatMessage($value);
 
-        $file = self::LOG_PATH . '/log.log'; //. strtolower($priority ?: self::INFO) . '.log';
+        $file = self::LOG_PATH . '/'.$filename.'.log'; //. strtolower($priority ?: self::INFO) . '.log';
 
         if (!@file_put_contents($file, $message . PHP_EOL . PHP_EOL . file_get_contents($file)/*, FILE_APPEND | LOCK_EX*/)) {
             throw new \RuntimeException("Unable to write to log file '$file'. Is directory writable?");
@@ -45,24 +49,24 @@ class Logger {
         //return $exceptionFile;
     }
 
-    public static function debug($value){
-        self::log($value,self::DEBUG);
+    public static function debug($filename,$value){
+        self::log($filename, $value,self::DEBUG);
     }
 
-    public static function info($value){
-        self::log($value,self::INFO);
+    public static function info($filename,$value){
+        self::log($filename, $value,self::INFO);
     }
 
-    public static function warning($value){
-        self::log($value,self::WARNING);
+    public static function warning($filename,$value){
+        self::log($filename, $value,self::WARNING);
     }
 
-    public static function error($value){
-        self::log($value,self::ERROR);
+    public static function error($filename,$value){
+        self::log($filename, $value,self::ERROR);
     }
 
-    public static function critical($value){
-        self::log($value,self::CRITICAL);
+    public static function critical($filename,$value){
+        self::log($filename, $value,self::CRITICAL);
     }
 
     private static function isDirectory(){
