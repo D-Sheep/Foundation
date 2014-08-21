@@ -223,8 +223,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
     public static function getReflection(){
         $n = get_called_class();
         if (!isset(self::$r_cache[$n])) {
-            self::$r_cache[$n] = $x = new \ReflectionClass($n);
-            $x->getDocComment
+            self::$r_cache[$n] = new \ReflectionClass($n);
         }
         return self::$r_cache[$n];
     }
