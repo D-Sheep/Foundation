@@ -31,7 +31,7 @@ class Logger {
 
         $file = self::LOG_PATH . '/log.log'; //. strtolower($priority ?: self::INFO) . '.log';
 
-        if (!@file_put_contents($file, $message . PHP_EOL.file_get_contents($file)/*, FILE_APPEND | LOCK_EX*/)) {
+        if (!@file_put_contents($file, $message . PHP_EOL . PHP_EOL . file_get_contents($file)/*, FILE_APPEND | LOCK_EX*/)) {
             throw new \RuntimeException("Unable to write to log file '$file'. Is directory writable?");
         }
 
