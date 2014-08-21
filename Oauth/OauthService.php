@@ -7,6 +7,7 @@
 
 namespace Foundation\Oauth;
 
+use Nette\Security\Security\IIdentity;
 use Phalcon\Http\Response,
     Foundation\Oauth\IOauthSignable,
     Foundation\Oauth\IOauthStore,
@@ -308,7 +309,7 @@ class OAuthService {
         }
 
         // We need to remember the callback
-        $verify_oauth_token = $this->session['verify_oauth_token'];
+        $verify_oauth_token = $this->session->get('verify_oauth_token');
 
         if ( empty($verify_oauth_token) && !$manualToken || strcmp($verify_oauth_token, $rs->token)){
             $this->session->set('verify_oauth_token', $rs->token);
@@ -319,6 +320,7 @@ class OAuthService {
             else*/
                 $this->session->set('verify_oauth_callback', $rs->callback_url);
         }
+
         return $rs;
     }
 
@@ -332,22 +334,26 @@ class OAuthService {
      * @param int user_id			user for which the token was authorized (or denied)
      * @return string verifier  For 1.0a Compatibility
      */
-    public function authorizeFinish ( $authorized, Account $account ){
-
-        $token = $this->request->getParam('oauth_token', true);
+    public function authorizeFinish ( $authorized, IIdentity $account, $token, $callback ){
+        $logger = \Phalcon\DI::getDefault()->getLogger();
+        //$token = $this->request->getParam('oauth_token', true);
         $verifier = null;
+        $logger->alert("service: token ze sešny: ".$this->session->get('verify_oauth_token'));
+        $logger->alert("service: token z url: ".$token);
+        $logger->alert("service: callback z url: ".$callback);
         if ($this->session->get('verify_oauth_token') == $token)
         {
+            $logger->alert("service: tokeny jsou stejny");
             // Flag the token as authorized, or remove the token when not authorized
             $store = $this->store;
 
             // Fetch the referrer host from the oauth callback parameter
             $referrer_host  = '';
             $oauth_callback = false;
-            $verify_oauth_callback = $this->session->get('verify_oauth_callback');
+            $verify_oauth_callback = $callback;
             if (!empty($verify_oauth_callback) && $verify_oauth_callback != 'oob') // OUT OF BAND
             {
-                $oauth_callback = $this->session->get('verify_oauth_callback');
+                $oauth_callback = $callback;
                 $ps = parse_url($oauth_callback);
                 if (isset($ps['host'])) {
                     $referrer_host = $ps['host'];
@@ -362,16 +368,19 @@ class OAuthService {
                 //$this->logger->addNote('Authorization rejected for token "'.$token.'" for user '.$account->email."\nToken has been deleted");
                 $store->deleteConsumerRequestToken($token);
             }
-
+            //$logger->alert("service: callback ze sešny: ".$oauth_callback);
+            $logger->alert("service: referrer_host: ".$referrer_host);
+            $logger->alert("service: verifier: ".$verifier);
             if (!empty($oauth_callback)) {
-                $params = array('oauth_token' => rawurlencode($token));
+                //$params = array('oauth_token' => rawurlencode($token));
 
                 // 1.0a Compatibility : if verifier code has been generated, add it to the URL
-                if ($verifier) {
-                    $params['oauth_verifier'] = $verifier;
-                }
+                //if ($verifier) {
+                //    $params['oauth_verifier'] = $verifier;
+                //}
 
                 $uri = preg_replace('/\s/', '%20', $oauth_callback);
+                $logger->alert("service: uri: ".$uri);
                 if (!empty($this->allowed_uri_schemes))
                 {
                     if (!in_array(substr($uri, 0, strpos($uri, '://')), $this->allowed_uri_schemes))
@@ -386,8 +395,8 @@ class OAuthService {
                         throw new OauthException('Illegal protocol in redirect uri '.$uri);
                     }
                 }
-
-                return $this->response->redirect($oauth_callback, $params);
+                $oauth_callback=$oauth_callback."?oauth_token=".rawurlencode($token);
+                return $this->response->redirect($oauth_callback,true);
             }
         }
     }
@@ -437,10 +446,10 @@ class OAuthService {
      * Never returns, calls exit() when token is exchanged or when error is returned.
      */
     public function accessToken () {
-
+        $logger = \Phalcon\DI::getDefault()->getLogger();
         try {
             $this->verifyRequest(self::TOKEN_TYPE_REQUEST);
-
+            $logger->notice("service: verified");
             $options = array();
             $ttl     = $this->request->get('xoauth_token_ttl');
 
@@ -457,14 +466,19 @@ class OAuthService {
             $token  = $store->exchangeConsumerRequestForAccessToken($this->request->getParam('oauth_token', true), $options);
             /** @var /Foundation/Oauth/Secrets $token */
 
-            $this->response->setContent(array(
-                "oauth_token" => $token->token,
-                "oauth_token_secret" => $token->token_secret
-            ));
+            $logger->notice("service: exchange ok");
 
-            if ($token->ttl) {
-                $this->response['xoauth_token_ttl'] = $token->ttl;
+            $content = array(
+                "oauth_token"=> $token->token,
+                "oauth_token_secret" => $token->token_secret
+            );
+
+            if ($token->ttl){
+                $content['xoauth_token_ttl'] = $token->ttl;
             }
+            $logger->notice("service: content to set = ".var_export($content, true) );
+
+            $this->response->setContent(http_build_query($content));
 
             $this->response->setStatusCode(200, "");
             $this->response->setContentType("application/x-www-form-urlencoded");

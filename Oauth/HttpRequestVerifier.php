@@ -11,7 +11,7 @@ namespace Foundation\Oauth;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Url;
 
-class HttpRequestVarifier implements IOauthSignable {
+class HttpRequestVerifier implements IOauthSignable {
 
     /** @var Request */
     protected $request;
@@ -300,7 +300,7 @@ class HttpRequestVarifier implements IOauthSignable {
             $this->encodedParams = $return;
         }
         //$this->logger->notice("params  ".var_export($return, true));
-        $this->getLogger()->commit();
+        //$this->getLogger()->commit();
         return $this->encodedParams;
     }
 

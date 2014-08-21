@@ -9,11 +9,13 @@ namespace Foundation\Mvc;
 
 
 use Foundation\Oauth\CryptMethodFactory;
-use Foundation\Oauth\HttpRequestVarifier;
+use Foundation\Oauth\HttpRequestVerifier;
 use Foundation\Oauth\OAuthService;
 use Foundation\Oauth\Secrets;
 use Foundation\Security\Authenticator;
 use Foundation\Security\Authoriser;
+use Foundation\Security\MemoryStorage;
+use Foundation\Security\SessionStorage;
 use Nette\Security\Security\User;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Controller;
@@ -53,17 +55,20 @@ class ApiController extends Controller {
         $this->payload = (object) [];
     }
 
-    /** @return User */
+    /**
+     *
+     * @return User */
     public function getUser($forceSessionUser = FALSE){
         if ($forceSessionUser){
-            $this->di->get('user');
+            return $this->di->getUser();
         }
         if ($this->_user === null){
             if ($this->isSigned()){
                 try {
-                    $this->secrets = $this->di->get('oAuthService')->verifyExtended();
+                    $this->secrets = $this->di->getOAuthService()->verifyExtended();
                     $this->_oauthSecrets = $this->secrets;
-                    $account = Account::findFirst($this->secrets->account_id);
+                    $person = Person::getSelect()->join('account')
+                        ->where('account_id= %i',$this->secrets->account_id)->fetchFirst();
                 } catch (\Foundation\Oauth\OauthException $e) {
                     /*if ($this->getContext()->parameters['debugMode']) {
                         $this->payload->oauthError = $e->getMessage();
@@ -71,14 +76,14 @@ class ApiController extends Controller {
                     \Foundation\Utils\Logger::log("oauth-getuser-error", $e->getMessage(), $this->getHttpRequest()->getAllParams());
                     $account = null;*/
                 }
-                 $this->_user = new User(
-                     new OauthStore($this->di->get('modelsManger')),
-                     new OauthStore($this->di->get('authenticator')),
-                     new OauthStore($this->di->get('authoriser'))
+                $this->_user = new User(
+                     new MemoryStorage($person),
+                     $this->di->getAuthenticator(),
+                     $this->di->getAuthoriser()
                      );
                 $this->di->set('user',$this->_user);
             } else {
-                $this->_cachedUser = $this->di->get('user');
+                $this->_user = $this->di->get('user');
             }
         }
         return $this->_user;
@@ -88,9 +93,9 @@ class ApiController extends Controller {
     public function getLoggedPerson(){
         if ($this->getUser()->getIdentity()) {
             if (!$this->_person) {
-                $this->_person = Person::find(array('person.account_id'=>  $this->getUser()->getId()));
+                $this->_person = Person::getById($this->getUser()->getIdentity()->getId());
             }
-            return $this->_cachedPerson;
+            return $this->_person;
         } else {
             return null;
         }
@@ -104,7 +109,7 @@ class ApiController extends Controller {
 
     public function getHttpRequest(){
         if ($this->_request === null){
-            $this->_request = new HttpRequestVarifier($this->di->getRequest(), new CryptMethodFactory($this->di->getOauthStore()));
+            $this->_request = new HttpRequestVerifier($this->di->getRequest(), new CryptMethodFactory($this->di->getOauthStore()));
         }
         return $this->_request;
     }

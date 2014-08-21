@@ -7,33 +7,51 @@
 
 namespace Foundation\Security;
 
-use Nette\Security\IUserStorage;
+use Nette\Security\Security\IIdentity;
+use Nette\Security\Security\IUserStorage;
 
 class MemoryStorage  implements IUserStorage {
+
+    protected $identity = null;
+    protected $authenticated = false;
+
+    function __construct(IIdentity $identity = null, $authenticated = null) {
+        $this->identity = $identity;
+        $this->authenticated = $authenticated !== null ? $authenticated : !!$identity;
+    }
+
     /**
      * Sets the authenticated status of this user.
      * @param  bool
      * @return void
      */
-    function setAuthenticated($state){}
+    function setAuthenticated($state){
+        $this->authenticated = $state;
+    }
 
     /**
      * Is this user authenticated?
      * @return bool
      */
-    function isAuthenticated(){}
+    function isAuthenticated(){
+        return $this->authenticated;
+    }
 
     /**
      * Sets the user identity.
      * @return void
      */
-    function setIdentity(IIdentity $identity = NULL){}
+    function setIdentity(IIdentity $identity = NULL){
+        $this->identity = $identity;
+    }
 
     /**
      * Returns current user identity, if any.
      * @return \Nette\Security\Security\IIdentity|NULL
      */
-    function getIdentity(){}
+    function getIdentity(){
+        return $this->identity;
+    }
 
     /**
      * Enables log out from the persistent storage after inactivity.

@@ -7,8 +7,8 @@
 
 namespace Foundation\Security;
 
-use Nette\Security\IAuthenticator,
-    Storyous\Account;
+use Nette\Security\Security\IAuthenticator,
+    Storyous\Entities\Account;
 
 class Authenticator implements IAuthenticator {
 
@@ -44,13 +44,14 @@ class Authenticator implements IAuthenticator {
     }
 
     function authenticate(array $credentials){
-        $account = $this->authenticatorStorage->getIdentityByName($credentials[self::USERNAME]);
-
-        if (count($account) == 0) {
+        //$logger = \Phalcon\DI::getDefault()->getLogger();
+        $person = $this->authenticatorStorage->getIdentityByName($credentials[self::USERNAME]);
+        //$logger->alert(var_export($person->getAccount(),true));
+        if (count($person) == 0) {
             throw new \Nette\Security\Security\AuthenticationException(self::$account_not_exists, self::ERR_ACCOUNT_NOT_EXSTS);
         }
 
-        $acc = $account->getFirst();
+        $acc = $person->getAccount();
         /* @var $acc Account */
 
         if ($acc->password == null) {
@@ -69,9 +70,9 @@ class Authenticator implements IAuthenticator {
 
         if (!$acc->salt) {
             $acc->updatePassword($credentials[self::PASSWORD]);
-            $acc->update();
+            $acc->update(["salt", "password"]);
         }
-
-        return $acc;
+        //$logger->alert(var_export($person,true));
+        return $person;
     }
 }

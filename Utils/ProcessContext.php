@@ -13,7 +13,7 @@ use Foundation\BadRequestException;
 use Foundation\DataObject;
 use Phalcon\Http\Response;
 
-class ProcessContext extends DataObject {
+class ProcessContext extends \Fastorm\DataObject {
 
     /**
      * @key
@@ -39,6 +39,13 @@ class ProcessContext extends DataObject {
      */
     public $registerContent;
 
+    /**
+     *
+     * @return \Phalcon\DiInterface
+     */
+    protected static function getDi() {
+        return \Phalcon\DI::getDefault();
+    }
 
 
     /**
@@ -46,9 +53,14 @@ class ProcessContext extends DataObject {
      * @return ProcessContext
      */
     public static function getById($id, $badRequestIfNotFound = false, array $validateParams = null) {
-        $session = static::getDi()->getSession->get('processcontext');
-
-        if (isset($session[$id])) {
+        $logger = self::getDi()->getLogger();
+        $logger->notice("ProcessContext: jsem v getById");
+        $session = static::getDi()->getSession();
+        $logger->notice("ProcessContext: mam sesnu");
+        $sessionname = "processcontext_".$id;
+        $logger->notice("ProcessContext: sessionname = ".$sessionname);
+        if ($session->has($sessionname)){
+            $logger->notice("ProcessContext: sesna je");
             if ($validateParams && $validateParams) {
                 foreach ($validateParams as $param) {
                     if (empty($session[$id][$param])) {
@@ -56,10 +68,11 @@ class ProcessContext extends DataObject {
                     }
                 }
             }
-            return $session[$id];
+            return $session->get($sessionname);
         } else if ($badRequestIfNotFound) {
             throw new BadRequestException();
         } else {
+            $logger->notice("ProcessContext: sesna neni");
             return null;
         }
     }
@@ -102,18 +115,24 @@ class ProcessContext extends DataObject {
     public static function create() {
         $obj = new ProcessContext();
         $obj->id = md5(str_repeat(microtime()."microsalt", 2));
-        $session = static::getDi()->getSession()->get('processcontext');
-        $session->setExpiration('+ 2 hours');
-        $session[$obj->id] = $obj;
+        $session = static::getDi()->getSession();
+        //$session->setExpiration('+ 2 hours');  TODO je problem, že neumi expiration?
+        $bag =
+        $session->set("processcontext_".$obj->id, $obj);
         return $obj;
     }
 
     public function go() {
         //$presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
+        $logger = static::getDi()->getLogger();
+        //$logger->notice("ProcessContext: callback = ".$this->callback);
         if ($this->callback) {
+            //$logger->notice("ProcessContext: jsem v ifu");
             $url = $this->callback;
             $this->callback = null;
-            $response = new \Phalcon\Http\Response();
+            //$response = new \Phalcon\Http\Response();
+
+            //$logger->notice("ProcessContext: url = ".$url);
 
             /* kdyby se nepředávala flash zpráva od minula
              * if ($presenter->hasFlashSession()) {
@@ -121,20 +140,22 @@ class ProcessContext extends DataObject {
                 $url .= $sign . \Nette\Application\UI\Presenter::FLASH_KEY . "=" .urlencode($presenter->getParameter(\Nette\Application\UI\Presenter::FLASH_KEY));
             }*/
             //interni redirect
-            $response->redirect($url);
-            $response->send();
+            //$response->redirect($url);
+            return $url;
         }
     }
 
     public function goLoginSignUp($goBackToCurrentPage = false) {
+        $url = static::getDi()->getUrl();
         if ($goBackToCurrentPage) {
-            $url = static::getDi()->getUrl();
-            $this->setCallback($url->get(array('for' => 'this', 'invalidate'=>true)));
+            $this->setCallback($url->get(array('for' => 'this', 'sal'=>$this->id)));
         }
-
-        $r = new Response();
-        $r->redirect();
-        return $r; //TODO !!! kam mě to asi pošle?
+        $logger = static::getDi()->getLogger();
+        $logger->notice($url->get("api/login/".$this->id));
+        //$r = new Response();
+        //$r->redirect("api/login/".$this->id);
+        return $this->id;
+        //return $r;
         //$presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
     }
 
