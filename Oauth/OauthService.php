@@ -335,15 +335,11 @@ class OAuthService {
      * @return string verifier  For 1.0a Compatibility
      */
     public function authorizeFinish ( $authorized, IIdentity $account, $token, $callback ){
-        $logger = \Phalcon\DI::getDefault()->getLogger();
+
         //$token = $this->request->getParam('oauth_token', true);
         $verifier = null;
-        $logger->alert("service: token ze sešny: ".$this->session->get('verify_oauth_token'));
-        $logger->alert("service: token z url: ".$token);
-        $logger->alert("service: callback z url: ".$callback);
         if ($this->session->get('verify_oauth_token') == $token)
         {
-            $logger->alert("service: tokeny jsou stejny");
             // Flag the token as authorized, or remove the token when not authorized
             $store = $this->store;
 
@@ -369,8 +365,6 @@ class OAuthService {
                 $store->deleteConsumerRequestToken($token);
             }
             //$logger->alert("service: callback ze sešny: ".$oauth_callback);
-            $logger->alert("service: referrer_host: ".$referrer_host);
-            $logger->alert("service: verifier: ".$verifier);
             if (!empty($oauth_callback)) {
                 //$params = array('oauth_token' => rawurlencode($token));
 
@@ -380,7 +374,6 @@ class OAuthService {
                 //}
 
                 $uri = preg_replace('/\s/', '%20', $oauth_callback);
-                $logger->alert("service: uri: ".$uri);
                 if (!empty($this->allowed_uri_schemes))
                 {
                     if (!in_array(substr($uri, 0, strpos($uri, '://')), $this->allowed_uri_schemes))
@@ -446,10 +439,9 @@ class OAuthService {
      * Never returns, calls exit() when token is exchanged or when error is returned.
      */
     public function accessToken () {
-        $logger = \Phalcon\DI::getDefault()->getLogger();
         try {
             $this->verifyRequest(self::TOKEN_TYPE_REQUEST);
-            $logger->notice("service: verified");
+
             $options = array();
             $ttl     = $this->request->get('xoauth_token_ttl');
 
@@ -466,8 +458,6 @@ class OAuthService {
             $token  = $store->exchangeConsumerRequestForAccessToken($this->request->getParam('oauth_token', true), $options);
             /** @var /Foundation/Oauth/Secrets $token */
 
-            $logger->notice("service: exchange ok");
-
             $content = array(
                 "oauth_token"=> $token->token,
                 "oauth_token_secret" => $token->token_secret
@@ -476,7 +466,6 @@ class OAuthService {
             if ($token->ttl){
                 $content['xoauth_token_ttl'] = $token->ttl;
             }
-            $logger->notice("service: content to set = ".var_export($content, true) );
 
             $this->response->setContent(http_build_query($content));
 
