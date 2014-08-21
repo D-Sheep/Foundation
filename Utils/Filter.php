@@ -111,4 +111,28 @@ class Filter extends Strings {
         return \abs($ret);
     }
 
+    public static function stringDate(\DateTime $inputDate, $now = null) {
+        $diff = $inputDate->diff($now !== null ? $now : new \DateTime());
+        /* @var $diff \DateInterval  */
+
+        if ($diff->y > 0) {
+            return sprintf('%dy', $diff->y);
+        }
+
+        if ($diff->days > 0) {
+            return sprintf('%dd', round($diff->days));
+        }
+
+        if ($diff->h > 0) {
+            return sprintf('%dh', round($diff->h));
+        }
+
+        if ($diff->i > 0) {
+            return sprintf('%dm', round($diff->i));
+        }
+
+
+        return sprintf('%ds', round($diff->s));
+    }
+
 }
