@@ -43,16 +43,13 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
     }
 
     public function __destruct(){
-        $logger = \Phalcon\DI::getDefault()->getLogger();
-        $logger->notice("sešna: jdu ukladat");
-        $logger->notice("sešna: data =".var_export($this->_data,true) );
+
         if ($this->_data == null ){
             return;
         }
         foreach ($this->_data as $key => $value) {
             if ($value!=null) {
                 $this->cache->save($key,$value);
-                //TODO expiration?
             }
 
         }
@@ -60,15 +57,10 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
     }
 
     private function getSessionId(){
-        $logger = \Phalcon\DI::getDefault()->getLogger();
-
         if ($this->session_id == null){
             if (isset($_COOKIE[self::SESSION_COOKIE_KEY])){
-                $logger->notice("session: zjistuju SSID, sušenka je");
                 $this->session_id = $_COOKIE[self::SESSION_COOKIE_KEY];
-                $logger->notice("session:  SSID = ".$this->session_id);
             } else {
-                $logger->notice("session: zjistuju SSID, sušenka neni");
                 $this->session_id = $this->generateSSID();
                 setcookie(self::SESSION_COOKIE_KEY, $this->session_id);
             }
@@ -131,14 +123,11 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
      */
     public function get($index, $defaultValue = null)
     {
-        $logger = \Phalcon\DI::getDefault()->getLogger();
         if (!$this->isStarted()) {
             $this->start();
         }
         $name = $this->getName($index);
         if (!isset($this->_data[$name])){
-            $logger->notice("session keys: ".var_export($this->cache->queryKeys()));
-            $logger->notice("session: my name: ".$name);
             $this->_data[$name] = $this->cache->get($name);
         }
         return $this->_data[$name];

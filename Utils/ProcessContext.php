@@ -53,14 +53,10 @@ class ProcessContext extends \Fastorm\DataObject {
      * @return ProcessContext
      */
     public static function getById($id, $badRequestIfNotFound = false, array $validateParams = null) {
-        $logger = self::getDi()->getLogger();
-        $logger->notice("ProcessContext: jsem v getById");
+
         $session = static::getDi()->getSession();
-        $logger->notice("ProcessContext: mam sesnu");
         $sessionname = "processcontext_".$id;
-        $logger->notice("ProcessContext: sessionname = ".$sessionname);
         if ($session->has($sessionname)){
-            $logger->notice("ProcessContext: sesna je");
             if ($validateParams && $validateParams) {
                 foreach ($validateParams as $param) {
                     if (empty($session[$id][$param])) {
@@ -72,7 +68,6 @@ class ProcessContext extends \Fastorm\DataObject {
         } else if ($badRequestIfNotFound) {
             throw new BadRequestException();
         } else {
-            $logger->notice("ProcessContext: sesna neni");
             return null;
         }
     }
@@ -124,7 +119,6 @@ class ProcessContext extends \Fastorm\DataObject {
 
     public function go() {
         //$presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
-        $logger = static::getDi()->getLogger();
         //$logger->notice("ProcessContext: callback = ".$this->callback);
         if ($this->callback) {
             //$logger->notice("ProcessContext: jsem v ifu");
@@ -150,8 +144,6 @@ class ProcessContext extends \Fastorm\DataObject {
         if ($goBackToCurrentPage) {
             $this->setCallback($url->get(array('for' => 'this', 'sal'=>$this->id)));
         }
-        $logger = static::getDi()->getLogger();
-        $logger->notice($url->get("api/login/".$this->id));
         //$r = new Response();
         //$r->redirect("api/login/".$this->id);
         return $this->id;
