@@ -112,7 +112,7 @@ class ProcessContext extends \Fastorm\DataObject {
         $obj->id = md5(str_repeat(microtime()."microsalt", 2));
         $session = static::getDi()->getSession();
         //$session->setExpiration('+ 2 hours');  TODO je problem, že neumi expiration?
-        $bag =
+        
         $session->set("processcontext_".$obj->id, $obj);
         return $obj;
     }
