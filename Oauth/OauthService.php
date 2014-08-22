@@ -11,7 +11,6 @@ use Nette\Security\Security\IIdentity;
 use Phalcon\Http\Response,
     Foundation\Oauth\IOauthSignable,
     Foundation\Oauth\IOauthStore,
-    Storyous\Account,
     Foundation\Oauth\IOauthConsumer,
     Foundation\Oauth\IOauthToken,
     Phalcon\Session\AdapterInterface;
@@ -260,7 +259,7 @@ class OAuthService {
 
             // Create a request token
             $token  = $this->store->addConsumerRequestToken($this->request->getParam('oauth_consumer_key', true), $options);
-            /** @var \Storyous\Entities\OauthServerToken $stoken */
+            /** @var IOauthToken $stoken */
 
             $content = array(
                 "oauth_token"=> $token->token,

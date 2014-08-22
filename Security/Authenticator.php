@@ -8,7 +8,7 @@
 namespace Foundation\Security;
 
 use Nette\Security\Security\IAuthenticator,
-    Storyous\Entities\Account;
+    Storyous\Core\Entities\Account;
 
 class Authenticator implements IAuthenticator {
 
