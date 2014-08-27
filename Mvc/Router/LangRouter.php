@@ -10,7 +10,7 @@
 namespace Foundation\Mvc\Router;
 
 
-use Foundation\Localization\LangService;
+use Foundation\Localization\ILangService;
 use Foundation\Mvc\Dispatcher;
 use Phalcon\Events\Event;
 use Phalcon\Mvc\Router;
@@ -20,11 +20,11 @@ class LangRouter extends Router {
     const LANG_PARAM = 'lang';
 
     /**
-     * @var \Foundation\Localization\LangService
+     * @var \Foundation\Localization\ILangService
      */
     protected $lang;
 
-    public function __construct($defaultRoutes = null, LangService $lang = null)
+    public function __construct($defaultRoutes = null, ILangService $lang = null)
     {
         $this->lang = $lang;
         parent::__construct($defaultRoutes);
