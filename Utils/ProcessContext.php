@@ -11,8 +11,9 @@ namespace Foundation\Utils;
 
 use Foundation\BadRequestException;
 use Foundation\DataObject;
+use Phalcon\Http\Response;
 
-class ProcessContext extends DataObject {
+class ProcessContext extends \Fastorm\DataObject {
 
     /**
      * @key
@@ -38,6 +39,13 @@ class ProcessContext extends DataObject {
      */
     public $registerContent;
 
+    /**
+     *
+     * @return \Phalcon\DiInterface
+     */
+    protected static function getDi() {
+        return \Phalcon\DI::getDefault();
+    }
 
 
     /**
@@ -45,9 +53,10 @@ class ProcessContext extends DataObject {
      * @return ProcessContext
      */
     public static function getById($id, $badRequestIfNotFound = false, array $validateParams = null) {
-        $session = static::getContext()->get('session')->get('processcontext');
 
-        if (isset($session[$id])) {
+        $session = static::getDi()->getSession();
+        $sessionname = "processcontext_".$id;
+        if ($session->has($sessionname)){
             if ($validateParams && $validateParams) {
                 foreach ($validateParams as $param) {
                     if (empty($session[$id][$param])) {
@@ -55,7 +64,7 @@ class ProcessContext extends DataObject {
                     }
                 }
             }
-            return $session[$id];
+            return $session->get($sessionname);
         } else if ($badRequestIfNotFound) {
             throw new BadRequestException();
         } else {
@@ -101,32 +110,45 @@ class ProcessContext extends DataObject {
     public static function create() {
         $obj = new ProcessContext();
         $obj->id = md5(str_repeat(microtime()."microsalt", 2));
-        $session = static::getContext()->get('session')->get('processcontext');
-        $session->setExpiration('+ 2 hours');
-        $session[$obj->id] = $obj;
+        $session = static::getDi()->getSession();
+        //$session->setExpiration('+ 2 hours');  TODO je problem, že neumi expiration?
+        
+        $session->set("processcontext_".$obj->id, $obj);
         return $obj;
     }
 
-    public function go(\Phalcon\Mvc\Controller $presenter = null) {
-        $presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
+    public function go() {
+        //$presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
+        //$logger->notice("ProcessContext: callback = ".$this->callback);
         if ($this->callback) {
+            //$logger->notice("ProcessContext: jsem v ifu");
             $url = $this->callback;
             $this->callback = null;
+            //$response = new \Phalcon\Http\Response();
 
-            if ($presenter->hasFlashSession()) {
+            //$logger->notice("ProcessContext: url = ".$url);
+
+            /* kdyby se nepředávala flash zpráva od minula
+             * if ($presenter->hasFlashSession()) {
                 $sign = strpos($url, "?")===false?"?":"&";
                 $url .= $sign . \Nette\Application\UI\Presenter::FLASH_KEY . "=" .urlencode($presenter->getParameter(\Nette\Application\UI\Presenter::FLASH_KEY));
-            }
-
-            $presenter->redirectUrl($url);
+            }*/
+            //interni redirect
+            //$response->redirect($url);
+            return $url;
         }
     }
 
-    public function goLoginSignUp(\Nette\Application\UI\Presenter $presenter, $goBackToCurrentPage = false) {
+    public function goLoginSignUp($goBackToCurrentPage = false) {
+        $url = static::getDi()->getUrl();
         if ($goBackToCurrentPage) {
-            $this->setCallback($presenter->link('this', array('invalidate'=>true)));
+            $this->setCallback($url->get(array('for' => 'this', 'sal'=>$this->id)));
         }
-        $presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
+        //$r = new Response();
+        //$r->redirect("api/login/".$this->id);
+        return $this->id;
+        //return $r;
+        //$presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
     }
 
 

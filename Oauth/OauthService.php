@@ -7,10 +7,10 @@
 
 namespace Foundation\Oauth;
 
+use Nette\Security\Security\IIdentity;
 use Phalcon\Http\Response,
     Foundation\Oauth\IOauthSignable,
     Foundation\Oauth\IOauthStore,
-    Storyous\Account,
     Foundation\Oauth\IOauthConsumer,
     Foundation\Oauth\IOauthToken,
     Phalcon\Session\AdapterInterface;
@@ -31,6 +31,8 @@ class OAuthService {
 
     /** @var AdapterInterface */
     protected $session;
+
+    private $_cachedCurrentSecrets;
 
     protected $allowed_uri_schemes = array(
         'http',
@@ -80,10 +82,9 @@ class OAuthService {
      * @exception OAuthException2 thrown when the request did not verify
      * @return int user_id associated with token (false when no user associated)
      */
-    public function verifyRequest (IOauthSignable $request, $token_type = self::TOKEN_TYPE_ACCESS ){
-        $this->request = $request;
-        $retval = $this->verifyExtended($token_type);
-        return $retval->account_id;
+    public function verifyRequest ($token_type = self::TOKEN_TYPE_ACCESS ){
+        /*$retval =*/ $this->verifyExtended($token_type);
+        //return $retval->account_id;
     }
 
     public function deauthorizeAccessToken() {
@@ -105,8 +106,7 @@ class OAuthService {
      * @return \Foundation\Oauth\Secrets
      */
     public function getCurrentSecrets($token_type = self::TOKEN_TYPE_ACCESS) {
-        //if ($this->_cachedCurrentSecrets===null || $token_type != self::TOKEN_TYPE_ACCESS) {
-        if ($token_type != self::TOKEN_TYPE_ACCESS) {
+        if ($this->_cachedCurrentSecrets===null || $token_type != self::TOKEN_TYPE_ACCESS) {
             $consumer_key = $this->request->get('oauth_consumer_key');
             $token = $this->request->get('oauth_token');
             $secrets = null;
@@ -131,12 +131,10 @@ class OAuthService {
             if ($token_type != self::TOKEN_TYPE_ACCESS) {
                 return $secrets;
             } else {
-                //$_cachedCurrentSecrets = $secrets ? $secrets : false;
-                return $secrets ? $secrets : false;
+                $this->_cachedCurrentSecrets = $secrets ? $secrets : false;
             }
         }
-        //TODO co když to neni access? co vratim?
-        //return $_cachedCurrentSecrets;
+        return $this->_cachedCurrentSecrets;
     }
 
     /**
@@ -150,9 +148,11 @@ class OAuthService {
     public function verifyExtended ( $token_type = self::TOKEN_TYPE_ACCESS ){
         $consumer_key = $this->request->get('oauth_consumer_key');
         $token        = $this->request->get('oauth_token');
-        $user_id      = false;
+
+        //$user_id      = false;
         $secrets      = array();
 
+        //requestToken
         if ($consumer_key && ($token_type === false || $token)){
             if (\is_array($token)) {
                 $token = isset($token[0]) ? $token[0] : null;
@@ -177,15 +177,15 @@ class OAuthService {
                 throw new OauthException('Verification of signature failed (no oauth_signature in request).');
             }
 
-            try {
+            //try {
                 $this->request->verifySignature($secrets, $token_type);
-            } catch (OauthException $e) {
+            /*} catch (OauthException $e) {
                 throw new OauthException('Verification of signature failed (signature base string was "'.$this->request->getSignatureBaseString().'").'
-                    . " with  " . print_r(array($secrets['consumer_secret'], $secrets['token_secret'], $token_type), true));
-            }
+                    . " with  " . $secrets->consumer_secret."  ".$secrets->token_secret."  ".$token_type);
+            }*/
 
             // Check the optional body signature
-            if ($this->request->get('xoauth_body_signature') && !($this->request->getContentType() == 'multipart/form-data')) {
+            /*if ($this->request->get('xoauth_body_signature') && !($this->request->getContentType() == 'multipart/form-data')) {
                 $method = $this->request->get('xoauth_body_signature_method');
                 if (empty($method)) {
                     $method = $this->request->get('oauth_signature_method');
@@ -197,20 +197,20 @@ class OAuthService {
                     //\Foundation\Utils\Logger::log("bad-body", $this->request->getMethod() . \var_export($this->request->getRequestBody(), true));
                     throw new OauthException('Verification of body signature failed.');
                 }
-            }
+            }*/
 
             // All ok - fetch the user associated with this request
-            if ($secrets->account_id){
+            /*if ($secrets->account_id){
                 $user_id = $secrets->account_id;
-            }
+            }*/
 
             // Check if the consumer wants us to reset the ttl of this token
-            $ttl = $this->request->getParam('xoauth_token_ttl', true);
+            /*$ttl = $this->request->getParam('xoauth_token_ttl', true);
             if (is_numeric($ttl)) {
                 $this->store->updateConsumerAccessTokenTtl($this->urldecode($token), $ttl); //TODO urldecode - co to asi tak má dělat?
-            }
+            }*/
         } else {
-            throw new OauthException('Can\'t verify request, missing oauth_consumer_key or oauth_token');
+            throw new OauthException('Can\'t verify request, missing oauth_consumer_key or oauth_token ');
         }
 
         return $secrets;
@@ -239,7 +239,7 @@ class OAuthService {
      *
      * TODO: add correct result code to exception
      *
-     * @return string 	returned request token, false on an error
+     * @return \Phalcon\Http\Response
      */
     public function requestToken () {
         try {
@@ -247,8 +247,7 @@ class OAuthService {
 
             $options = array();
             $ttl     = $this->request->get('xoauth_token_ttl');
-            if ($ttl)
-            {
+            if ($ttl) {
                 $options['token_ttl'] = $ttl;
             }
 
@@ -260,24 +259,26 @@ class OAuthService {
 
             // Create a request token
             $token  = $this->store->addConsumerRequestToken($this->request->getParam('oauth_consumer_key', true), $options);
+            /** @var IOauthToken $stoken */
 
-            $this->response->setContent(array(
-                "oauth_callback_confirmed"=>1,
+            $content = array(
                 "oauth_token"=> $token->token,
-                "oauth_token_secret" => $token->token_secret
-            ));
+                "oauth_token_secret" => $token->token_secret,
+                "oauth_callback_confirmed"=> true
+            );
 
             if ($token['used_token_ttl']){
-                $this->response['xoauth_token_ttl'] = $token['used_token_ttl'];
+                $content['xoauth_token_ttl'] = $token['used_token_ttl'];
             }
+            $this->response->setContent(http_build_query($content));
 
-            $request_token = $token->token_ttl;
+            //$request_token = $token->token_ttl;
 
             $this->response->setStatusCode(200, "");
             $this->response->setContentType('application/x-www-form-urlencoded');
 
         } catch (OauthException $e) {
-            $request_token = false;
+            //$request_token = false;
             $this->response->setStatusCode(401, "OAuth Verification Failed: " . $e->getMessage());
         }
 
@@ -303,21 +304,22 @@ class OAuthService {
         $rs = $this->store->getConsumerRequestToken($token);
 
         if (!$rs){
-            throw new OauthException('Unknown request token "'.$token.'"');
+            throw new OauthException('Unknown token "'.$token.'"');
         }
 
         // We need to remember the callback
-        $verify_oauth_token = $this->session['verify_oauth_token'];
+        $verify_oauth_token = $this->session->get('verify_oauth_token');
 
         if ( empty($verify_oauth_token) && !$manualToken || strcmp($verify_oauth_token, $rs->token)){
             $this->session->set('verify_oauth_token', $rs->token);
             $this->session->set('verify_oauth_consumer_key', $rs->getOauthServerRegistry()->consumer_key);
             $cb = $this->request->getParam('oauth_callback', true);
-            if ($cb)
+            /*if ($cb)
                 $this->session->set('verify_oauth_callback', $cb);
-            else
+            else*/
                 $this->session->set('verify_oauth_callback', $rs->callback_url);
         }
+
         return $rs;
     }
 
@@ -331,9 +333,9 @@ class OAuthService {
      * @param int user_id			user for which the token was authorized (or denied)
      * @return string verifier  For 1.0a Compatibility
      */
-    public function authorizeFinish ( $authorized, Account $account ){
+    public function authorizeFinish ( $authorized, IIdentity $account, $token, $callback ){
 
-        $token = $this->request->getParam('oauth_token', true);
+        //$token = $this->request->getParam('oauth_token', true);
         $verifier = null;
         if ($this->session->get('verify_oauth_token') == $token)
         {
@@ -343,10 +345,10 @@ class OAuthService {
             // Fetch the referrer host from the oauth callback parameter
             $referrer_host  = '';
             $oauth_callback = false;
-            $verify_oauth_callback = $this->session->get('verify_oauth_callback');
+            $verify_oauth_callback = $callback;
             if (!empty($verify_oauth_callback) && $verify_oauth_callback != 'oob') // OUT OF BAND
             {
-                $oauth_callback = $this->session->get('verify_oauth_callback');
+                $oauth_callback = $callback;
                 $ps = parse_url($oauth_callback);
                 if (isset($ps['host'])) {
                     $referrer_host = $ps['host'];
@@ -361,14 +363,14 @@ class OAuthService {
                 //$this->logger->addNote('Authorization rejected for token "'.$token.'" for user '.$account->email."\nToken has been deleted");
                 $store->deleteConsumerRequestToken($token);
             }
-
+            //$logger->alert("service: callback ze sešny: ".$oauth_callback);
             if (!empty($oauth_callback)) {
-                $params = array('oauth_token' => rawurlencode($token));
+                //$params = array('oauth_token' => rawurlencode($token));
 
                 // 1.0a Compatibility : if verifier code has been generated, add it to the URL
-                if ($verifier) {
-                    $params['oauth_verifier'] = $verifier;
-                }
+                //if ($verifier) {
+                //    $params['oauth_verifier'] = $verifier;
+                //}
 
                 $uri = preg_replace('/\s/', '%20', $oauth_callback);
                 if (!empty($this->allowed_uri_schemes))
@@ -385,13 +387,13 @@ class OAuthService {
                         throw new OauthException('Illegal protocol in redirect uri '.$uri);
                     }
                 }
-
-                return $this->response->redirect($oauth_callback, $params);
+                $oauth_callback=$oauth_callback."?oauth_token=".rawurlencode($token);
+                return $this->response->redirect($oauth_callback,true);
             }
         }
     }
 
-    public function xAuthAccessTokenForAccount (Account $account, IOauthConsumer $app){
+    /*public function xAuthAccessTokenForAccount (Account $account, IOauthConsumer $app){
         try{
 
             $options = array();
@@ -427,7 +429,7 @@ class OAuthService {
         }
 
         return $this->response;
-    }
+    }*/
 
     /**
      * Exchange a request token for an access token.
@@ -436,7 +438,6 @@ class OAuthService {
      * Never returns, calls exit() when token is exchanged or when error is returned.
      */
     public function accessToken () {
-
         try {
             $this->verifyRequest(self::TOKEN_TYPE_REQUEST);
 
@@ -454,15 +455,18 @@ class OAuthService {
 
             $store  = $this->store;
             $token  = $store->exchangeConsumerRequestForAccessToken($this->request->getParam('oauth_token', true), $options);
+            /** @var /Foundation/Oauth/Secrets $token */
 
-            $this->response->setContent(array(
-                "oauth_token" => $token->token,
+            $content = array(
+                "oauth_token"=> $token->token,
                 "oauth_token_secret" => $token->token_secret
-            ));
+            );
 
-            if ($token->ttl) {
-                $this->response['xoauth_token_ttl'] = $token->ttl;
+            if ($token->ttl){
+                $content['xoauth_token_ttl'] = $token->ttl;
             }
+
+            $this->response->setContent(http_build_query($content));
 
             $this->response->setStatusCode(200, "");
             $this->response->setContentType("application/x-www-form-urlencoded");

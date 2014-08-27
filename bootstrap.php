@@ -12,5 +12,6 @@ require 'Config/ConfigException.php';
 require 'Config/Builder.php';
 require 'Config/Configurator.php';
 require 'Router/Router.php';
+require 'Mvc/ApiController.php';
 
 const CACHE_MAX_LIFETIME = 518400;

@@ -7,10 +7,20 @@
 
 namespace Foundation\Security;
 
+use Nette\Security\Security\IIdentity;
 use Nette\Security\Security\IUserStorage;
 
 class SessionStorage implements IUserStorage {
 
+    const AUTHENTICATED = 'user_authenticated';
+    const IDENTITY = 'user_identity';
+
+    /** @var \Phalcon\DI\FactoryDefault */
+    private $di;
+
+    public function __construct(\Phalcon\DI\FactoryDefault $di){
+        $this->di = $di;
+    }
 
     /**
      * Sets the authenticated status of this user.
@@ -19,7 +29,7 @@ class SessionStorage implements IUserStorage {
      */
     function setAuthenticated($state)
     {
-        // TODO: Implement setAuthenticated() method.
+        $this->di->getSession()->set(self::AUTHENTICATED, $state);
     }
 
     /**
@@ -28,16 +38,10 @@ class SessionStorage implements IUserStorage {
      */
     function isAuthenticated()
     {
-        // TODO: Implement isAuthenticated() method.
-    }
-
-    /**
-     * Sets the user identity.
-     * @return void
-     */
-    function setIdentity(IIdentity $identity = NULL)
-    {
-        // TODO: Implement setIdentity() method.
+        if (!$this->di->getSession()->has(self::AUTHENTICATED)){
+            return false;
+        }
+        return $this->di->getSession()->get(self::AUTHENTICATED);
     }
 
     /**
@@ -46,7 +50,10 @@ class SessionStorage implements IUserStorage {
      */
     function getIdentity()
     {
-        // TODO: Implement getIdentity() method.
+        if (!$this->di->getSession()->has(self::IDENTITY)){
+            return null;
+        }
+        return $this->di->getSession()->get(self::IDENTITY);
     }
 
     /**
@@ -67,5 +74,14 @@ class SessionStorage implements IUserStorage {
     function getLogoutReason()
     {
         // TODO: Implement getLogoutReason() method.
+    }
+
+    /**
+     * Sets the user identity.
+     * @return void
+     */
+    function setIdentity(IIdentity $identity = NULL)
+    {
+        $this->di->getSession()->set(self::IDENTITY, $identity);
     }
 }

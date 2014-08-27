@@ -19,7 +19,6 @@ class Router extends \Phalcon\Mvc\Router {
      * @return string
      */
     public static function detectBasePath() {
-
         // path & query
         if (isset($_SERVER['REQUEST_URI'])) { // Apache, IIS 6.0
             $requestUrl = $_SERVER['REQUEST_URI'];

@@ -41,6 +41,6 @@ class Url extends \Phalcon\Mvc\Url {
                 }
             }
         }
-        return parent::get($uri, $args, $local);
+        return parent::get($uri, $args);
     }
 }

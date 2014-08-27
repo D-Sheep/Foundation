@@ -118,7 +118,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
         }
     }
 
-    /* TODO je potřeba?
+    /* TODO je to potřeba?
     public function __call($name, $args) {
         parent::__call($name, $args);
     }*/
@@ -223,8 +223,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
     public static function getReflection(){
         $n = get_called_class();
         if (!isset(self::$r_cache[$n])) {
-            self::$r_cache[$n] = $x = new \ReflectionClass($n);
-            $x->getDocComment
+            self::$r_cache[$n] = new \ReflectionClass($n);
         }
         return self::$r_cache[$n];
     }
@@ -262,7 +261,7 @@ class DataObject implements \ArrayAccess, \Serializable  {
      *
      * @return \Phalcon\DiInterface
      */
-    protected static function getContext() {
+    protected static function getDi() {
         return \Phalcon\DI::getDefault();
     }
 

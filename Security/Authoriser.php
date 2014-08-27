@@ -7,11 +7,9 @@
 
 namespace Foundation\Security;
 
-use Nette\Security\IAuthorizator;
+use Nette\Security\Security\IAuthorizator;
 use Phalcon\Acl\Adapter as Adapter;
-use Storyous\AccountGroup;
-use Storyous\AccountGroupPermission;
-use model\Security\AuthoriserStorage;
+use Foundation\Security\IAuthoriserStorage;
 
 class Authoriser extends Adapter implements IAuthorizator  {
 
@@ -39,7 +37,7 @@ class Authoriser extends Adapter implements IAuthorizator  {
         if (!$this->permissions) {
             $this->permissions = array();
             foreach ($this->storage->getAllPermissions() as $perm) {
-                /* @var $perm AccountGroupPermission */
+                // $perm AccountGroupPermission
                 $g = $perm->getAccountGroup()->code;
                 $r = $perm->getAccountResource()->code;
                 $this->addPermission($g, $r, $perm->permission, $perm->isAllowed);

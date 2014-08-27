@@ -24,7 +24,7 @@ class Secrets {
      */
     protected $serverRegister;
 
-    function __construct(OauthServerRegistry $serverRegister = null, IOauthToken $serverToken = null) {
+    function __construct(IOauthConsumer $serverRegister = null, IOauthToken $serverToken = null) {
         $this->serverToken = $serverToken;
         $this->serverRegister = $serverRegister;
         if ($serverRegister) {

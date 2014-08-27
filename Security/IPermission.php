@@ -7,16 +7,15 @@
 
 namespace Foundation\Security;
 
-use model\Entities\AccountResource;
+use Phalcon\Acl\ResourceInterface;
+use Phalcon\Acl\RoleInterface;
 
 interface IPermission {
 
-    //podle toho, co umi Phalcon model
-
-    /* @return AccntResource */
+    /* @return ResourceInterface */
     public function getResource();
 
-    /* @return Role */
+    /* @return RoleInterface */
     public function getRole();
 
     /* @return String */

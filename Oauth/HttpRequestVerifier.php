@@ -11,11 +11,12 @@ namespace Foundation\Oauth;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Url;
 
-class HttpRequestVarifier implements IOauthSignable {
+class HttpRequestVerifier implements IOauthSignable {
 
     /** @var Request */
     protected $request;
 
+    /** @var \Nette\Http\Url */
     protected $url;
 
     /** @var Array */
@@ -23,17 +24,29 @@ class HttpRequestVarifier implements IOauthSignable {
 
     protected $_rawBody;
 
-    public function __construct( Request $request){
+    /**
+     *
+     * @var \Foundation\Oauth\CryptMethodFactory
+     */
+    protected  $cryptMethodFactory;
+
+    public function __construct( Request $request, CryptMethodFactory $cryptMethodFactory = NULL){
         $this->request=$request;
         $this->getAllParams();
         $this->getRequestBody();
+        $this->cryptMethodFactory = $cryptMethodFactory;
     }
 
     public function getUrl(){
         if ($this->url === null){
-            @parse_url($this->request->getURI());
+            $this->url = $this->request->getDI()->getSuperUrl();
         }
         return $this->url;
+    }
+
+    /** @return \Phalcon\Logger\AdapterInterface */
+    public function getLogger(){
+        return $this->request->getDI()->getLogger();
     }
 
     public function getSignatureBaseString(){
@@ -41,6 +54,10 @@ class HttpRequestVarifier implements IOauthSignable {
         $sig[]	= $this->request->getMethod();
         $sig[]	= $this->getNormalizedUrl();
         $sig[]	= $this->getNormalizedParams();
+
+        //$this->getLogger()->notice($this->request->getMethod());
+        //$this->getLogger()->notice($this->getNormalizedUrl());
+        //$this->getLogger()->notice($this->getNormalizedParams());
 
         return implode('&', array_map(array($this, 'oauthurlencode'), $sig));
     }
@@ -50,18 +67,21 @@ class HttpRequestVarifier implements IOauthSignable {
      */
     function getNormalizedUrl (){
         $uri = $this->getUrl();
-        $url =  $uri['scheme'] . '://'
-            . $uri['user'] . (!empty($uri['password']) ? ':' : '')
-            . $uri['password'] . (!empty($uri['user']) ? '@' : '')
-            . $uri['host'];
+        //$this->getLogger()->notice("my url: ".var_export($uri, true));
+        $url =  $uri->getScheme() . '://'
+            . $uri->getUser() . (($uri->getPassword() != '') ? ':' : '')
+            . $uri->getPassword() . (($uri->getUser() != '') ? '@' : '')
+            . $uri->getHost();
 
-        if (	$uri['port']
-            &&	$uri['port'] != $this->defaultPortForScheme($uri['scheme'])){
-            $url .= ':'.$uri['port'];
+        if ($uri->getPort()
+            &&	$uri->getPort() != $this->defaultPortForScheme($uri->getScheme())) {
+            $url .= ':'.$uri->getPort();
         }
-        if (!empty($uri['path'])){
-            $url .= $uri['path'];
+
+        if (($uri->getPath() != '')) {
+            $url .= $uri->getPath();
         }
+
         return $url;
     }
 
@@ -79,7 +99,8 @@ class HttpRequestVarifier implements IOauthSignable {
         $values = array_values($this->param);
         array_multisort($keys, SORT_ASC, $values, SORT_ASC);
         */
-        $params     = $this->request->get();
+        $params     = $this->encodedParams;
+        //$this->logger->notice("params ".var_export($params, true));
         $normalized = array();
 
         ksort($params);
@@ -193,7 +214,7 @@ class HttpRequestVarifier implements IOauthSignable {
 
     public function getAllParams() {
         if ($this->encodedParams === null) {
-            $headers = $this->getNormHeaders();
+            //$headers = $this->getHeaders();
             $parameters = "";
 
             $return = array();
@@ -201,6 +222,14 @@ class HttpRequestVarifier implements IOauthSignable {
             if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
                 $matches = array();
                 $in = $_SERVER['HTTP_AUTHORIZATION'];
+            } else if (function_exists('apache_request_headers')){
+                $all = apache_request_headers();
+                if (isset($all['Authorization'])) {
+                    $in = $all['Authorization'];
+                }
+            }
+
+            if (isset($in)){
                 preg_match_all("/([a-z0-9_\-]+)=\"([^\"]+)\"/i", $in, $matches);
                 if ((preg_match("/^oauth\s/i", $in) || preg_match("/^x_auth_\s/i", $in)) && isset($matches[0])) {
                     foreach($matches[0] as $key => $match) {
@@ -209,14 +238,11 @@ class HttpRequestVarifier implements IOauthSignable {
                     }
                 }
             }
-
             // If this is a post then also check the posted variables
-            if ((strcasecmp($this->request->getMethod(), 'POST') == 0 || strcasecmp($this->request->getMethod(), 'PUT') == 0) && (!isset($return['xoauth_body_signature']) || !$return['xoauth_body_signature']))
-            {
+            if ((strcasecmp($this->request->getMethod(), 'POST') == 0 || strcasecmp($this->request->getMethod(), 'PUT') == 0) && (!isset($return['xoauth_body_signature']) || !$return['xoauth_body_signature'])) {
 
                 // TODO: what to do with 'multipart/form-data'?
-                if ($this->getContentType() == 'multipart/form-data'|| strcasecmp($this->request->getMethod(), 'PUT') == 0)
-                {
+                if ($this->getContentType() == 'multipart/form-data'|| strcasecmp($this->request->getMethod(), 'PUT') == 0) {
                     // Get the posted body (when available)
                     $parameters .= $this->getRequestBodyOfMultipart();
                 } else if ($this->getContentType() == 'application/x-www-form-urlencoded') {
@@ -226,28 +252,21 @@ class HttpRequestVarifier implements IOauthSignable {
             }
 
             // Now all is complete - parse all parameters
-            foreach (array($parameters) as $params)
-            {
-                if (strlen($params) > 0)
-                {
+            foreach (array($parameters) as $params) {
+                if (strlen($params) > 0) {
                     $params = explode('&', $params);
-                    foreach ($params as $p)
-                    {
+                    foreach ($params as $p) {
                         @list($name, $value) = explode('=', $p, 2);
-                        if (!strlen($name))
-                        {
+                        if (!strlen($name)) {
                             continue;
                         }
 
-                        if (array_key_exists($name, $return))
-                        {
+                        if (array_key_exists($name, $return)) {
                             if (is_array($return[$name]))
                                 $return[$name][] = $value;
                             else
                                 $return[$name] = array($return[$name], $value);
-                        }
-                        else
-                        {
+                        } else {
                             $return[$name]  = $value;
                         }
                     }
@@ -255,71 +274,35 @@ class HttpRequestVarifier implements IOauthSignable {
             }
 
             // Now all is complete - parse all parameters
-            foreach (array($this->getUrl()->getQuery()) as $params)
-            {
-                if (strlen($params) > 0)
-                {
+            /*foreach ($this->request->getQuery() as $params) {
+                if (strlen($params) > 0) {
                     $params = explode('&', $params);
-                    foreach ($params as $p)
-                    {
+                    foreach ($params as $p) {
                         @list($name, $value) = explode('=', $p, 2);
-                        if (!strlen($name))
-                        {
+                        if (!strlen($name)) {
                             continue;
                         } else {
                             $value = $this->oauthurlencode($value);
                         }
 
-                        if (array_key_exists($name, $return))
-                        {
+                        if (array_key_exists($name, $return)) {
                             if (is_array($return[$name]))
                                 $return[$name][] = $value;
                             else
                                 $return[$name] = array($return[$name], $value);
-                        }
-                        else
-                        {
+                        } else {
                             $return[$name]  = $value;
                         }
                     }
                 }
-            }
+            }*/
 
-            $this->encParams = $return;
+            $this->encodedParams = $return;
         }
+        //$this->logger->notice("params  ".var_export($return, true));
+        //$this->getLogger()->commit();
         return $this->encodedParams;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -404,7 +387,7 @@ class HttpRequestVarifier implements IOauthSignable {
         }
 
         foreach ($required as $req){
-            if ($this->getParam($req) != null){
+            if (!isset($this->encodedParams[$req])){
                 throw new OauthException('Can\'t verify request signature, missing parameter "'.$req.'"');
             }
         }
@@ -479,4 +462,6 @@ class HttpRequestVarifier implements IOauthSignable {
         }
         return $this->_rawBody;
     }
+
+
 }
