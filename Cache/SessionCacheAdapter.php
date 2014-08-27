@@ -90,8 +90,6 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
         $di = \Phalcon\DI::getDefault();
         $cacheFactory = $di->getCacheFactory();
         $this->cache = $cacheFactory->getCacheBackend("s_");
-
-
     }
 
     /**
@@ -123,7 +121,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
      */
     public function get($index, $defaultValue = null)
     {
-        if (!$this->isStarted()) {
+        if (!$this->is_started) {
             $this->start();
         }
         $name = $this->getName($index);
@@ -142,7 +140,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
      */
     public function set($index, $value)
     {
-        if (!$this->isStarted()) {
+        if (!$this->is_started) {
             $this->start();
         }
         $name = $this->getName($index);
@@ -157,6 +155,9 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
      */
     public function has($index)
     {
+        if (!$this->is_started) {
+            $this->start();
+        }
         $name = $this->getName($index);
         if (isset($this->_data[$name])){
             return true;
@@ -171,6 +172,9 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
      */
     public function remove($index)
     {
+        if (!$this->is_started) {
+            $this->start();
+        }
         $name = $this->getName($index);
         if (isset($this->_data[$name])){
             unset($this->_data[$name]);
