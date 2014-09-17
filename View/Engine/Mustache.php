@@ -74,11 +74,11 @@ class Mustache extends Engine implements EngineInterface
 
         if (!$stache) {
             $res = $this->callback($res);
-            /*if (preg_match("|{{#each|", $t)) {
+            if (preg_match("|{{#each|", $res)) {
                 echo "<pre>";
                 echo htmlspecialchars($res);
                 exit();
-            }*/
+            }
         }
 
         return $res;

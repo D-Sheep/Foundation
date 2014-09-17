@@ -7,6 +7,7 @@
 
 namespace Foundation\Security;
 
+use Foundation\Logger;
 use Nette\Security\Security\IAuthenticator,
     Storyous\Core\Entities\Account;
 
@@ -44,9 +45,8 @@ class Authenticator implements IAuthenticator {
     }
 
     function authenticate(array $credentials){
-        //$logger = \Phalcon\DI::getDefault()->getLogger();
         $person = $this->authenticatorStorage->getIdentityByName($credentials[self::USERNAME]);
-        //$logger->alert(var_export($person->getAccount(),true));
+
         if (count($person) == 0) {
             throw new \Nette\Security\Security\AuthenticationException(self::$account_not_exists, self::ERR_ACCOUNT_NOT_EXSTS);
         }

@@ -8,6 +8,7 @@
 namespace Foundation\Oauth;
 
 
+use Foundation\Logger;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Url;
 
@@ -44,20 +45,11 @@ class HttpRequestVerifier implements IOauthSignable {
         return $this->url;
     }
 
-    /** @return \Phalcon\Logger\AdapterInterface */
-    public function getLogger(){
-        return $this->request->getDI()->getLogger();
-    }
-
     public function getSignatureBaseString(){
         $sig 	= array();
         $sig[]	= $this->request->getMethod();
         $sig[]	= $this->getNormalizedUrl();
         $sig[]	= $this->getNormalizedParams();
-
-        //$this->getLogger()->notice($this->request->getMethod());
-        //$this->getLogger()->notice($this->getNormalizedUrl());
-        //$this->getLogger()->notice($this->getNormalizedParams());
 
         return implode('&', array_map(array($this, 'oauthurlencode'), $sig));
     }
@@ -67,7 +59,6 @@ class HttpRequestVerifier implements IOauthSignable {
      */
     function getNormalizedUrl (){
         $uri = $this->getUrl();
-        //$this->getLogger()->notice("my url: ".var_export($uri, true));
         $url =  $uri->getScheme() . '://'
             . $uri->getUser() . (($uri->getPassword() != '') ? ':' : '')
             . $uri->getPassword() . (($uri->getUser() != '') ? '@' : '')
@@ -100,7 +91,6 @@ class HttpRequestVerifier implements IOauthSignable {
         array_multisort($keys, SORT_ASC, $values, SORT_ASC);
         */
         $params     = $this->encodedParams;
-        //$this->logger->notice("params ".var_export($params, true));
         $normalized = array();
 
         ksort($params);
@@ -299,8 +289,6 @@ class HttpRequestVerifier implements IOauthSignable {
 
             $this->encodedParams = $return;
         }
-        //$this->logger->notice("params  ".var_export($return, true));
-        //$this->getLogger()->commit();
         return $this->encodedParams;
     }
 
