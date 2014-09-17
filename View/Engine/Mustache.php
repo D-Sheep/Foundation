@@ -36,6 +36,10 @@ class Mustache extends Engine implements EngineInterface
         $loader = new MustachePartialsLoader($view, $this);
         $this->mustache->setPartialsLoader($loader);
 
+        $this->mustache->addHelper('uppercase', function($value) {
+            return strtoupper((string) $value);
+        });
+
         parent::__construct($view, $dependencyInjector);
     }
 
@@ -54,7 +58,7 @@ class Mustache extends Engine implements EngineInterface
 
         $tplContent = $this->getCachedTemplate($path);
 
-        $content = $this->mustache->render($tplContent, $params);
+        $content = $this->mustache->render("{{%FILTERS}}\n".$tplContent, $params);
 
         if ($mustClean) {
             $this->_view->setContent($content);
@@ -72,7 +76,9 @@ class Mustache extends Engine implements EngineInterface
     public function getCachedTemplate($path, $stache = false) {
         $res = preg_replace('/[\s]+/', ' ', file_get_contents($path));;
 
-        if (!$stache) {
+        if ($stache) {
+            $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
+        } else {
             $res = $this->callback($res);
             if (preg_match("|{{#each|", $res)) {
                 echo "<pre>";
@@ -96,5 +102,15 @@ class Mustache extends Engine implements EngineInterface
     public function getPartial($path, $stache = false) {
         return $this->mustache->getPartialsLoader()->load($path, $stache);
     }
+
+    /**
+     * @return \Mustache_Engine
+     */
+    public function getMustacheEngine()
+    {
+        return $this->mustache;
+    }
+
+
 
 }

@@ -10,6 +10,7 @@
 namespace Foundation\View;
 
 
+use Foundation\View\Engine\Mustache;
 use Nette\Utils\Finder;
 use Phalcon\Cache\Backend;
 use Phalcon\Mvc\View;
@@ -73,7 +74,7 @@ class MustacheTemplateAssets {
      */
     protected function getMustache() {
         if ($this->_mustache === null) {
-            $this->_mustache = new View\Engine\Mustache($this->view);
+            $this->_mustache = new Mustache($this->view);
         }
         return $this->_mustache;
     }
