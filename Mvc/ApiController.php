@@ -42,14 +42,16 @@ class ApiController extends Controller {
 
     private $secrets;
 
-    private $_request;
-
     public $payload;
 
     public function initialize(){
         $di = $this->getDI();
+        $di->set('httpRequest', function () use($di){
+            return new \Foundation\Oauth\HttpRequestVerifier($di->getRequest(),
+                new CryptMethodFactory($di->getOauthStore()));
+        },true);
         $di->set('oAuthService', function() use($di){
-            return new OAuthService($di->get('session'), $this->getHttpRequest(), $this->response,
+            return new OAuthService($di->get('session'), $di->getHttpRequest(), $this->response,
                 $di->getOauthStore());
         }, true);
         $this->payload = (object) [];
@@ -108,16 +110,13 @@ class ApiController extends Controller {
     }
 
     public function getHttpRequest(){
-        if ($this->_request === null){
-            $this->_request = new HttpRequestVerifier($this->di->getRequest(), new CryptMethodFactory($this->di->getOauthStore()));
-        }
-        return $this->_request;
+        return $this->getDI()->getHttpRequest();
     }
 
     /** @return boolean */
     public function isSigned(){
         if ($this->isSigned === null){
-            $this->isSigned = $this->getHttpRequest()->isSigned();
+            $this->isSigned = $this->getDI()->getHttpRequest()->isSigned();
             if ($this->isSigned === null) {
                 $this->isSigned = "";
                 return false;
