@@ -9,5 +9,6 @@ namespace Foundation\Security;
 
 
 interface IAuthenticatorStorage {
+
     public function getIdentityByName($identity);
 }

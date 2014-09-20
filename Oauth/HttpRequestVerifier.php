@@ -231,10 +231,11 @@ class HttpRequestVerifier implements IOauthSignable {
             // If this is a post then also check the posted variables
             if ((strcasecmp($this->request->getMethod(), 'POST') == 0 || strcasecmp($this->request->getMethod(), 'PUT') == 0) && (!isset($return['xoauth_body_signature']) || !$return['xoauth_body_signature'])) {
 
-                // TODO: what to do with 'multipart/form-data'?
                 if ($this->getContentType() == 'multipart/form-data'|| strcasecmp($this->request->getMethod(), 'PUT') == 0) {
                     // Get the posted body (when available)
+                    // pro ziskani parametru použij request->getPut()
                     $parameters .= $this->getRequestBodyOfMultipart();
+
                 } else if ($this->getContentType() == 'application/x-www-form-urlencoded') {
                     // Get the posted body (when available)
                     $parameters .= str_replace(["+", "*", "%7E"], ["%20", "%2A", "~"], $this->getRequestBody());
@@ -291,6 +292,8 @@ class HttpRequestVerifier implements IOauthSignable {
         }
         return $this->encodedParams;
     }
+
+
 
 
 
