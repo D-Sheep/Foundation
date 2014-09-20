@@ -28,6 +28,7 @@ use Storyous\Security\AuthoriserStorage;
 class ApiController extends Controller {
 
     const ERR_ACCESS_NOT_PERMITED = 401;
+    const ERR_BAD_REQUEST = 400;
     const ERR_NOT_FOUND = 404;
     const ERR_BAD_INPUT = 402;
 
@@ -159,6 +160,9 @@ class ApiController extends Controller {
 
             case self::ERR_ACCESS_NOT_PERMITED:
                 return "Access not permitted";
+
+            case self::ERR_BAD_REQUEST:
+                return "Bad request";
 
             default:
                 return "Server error";
