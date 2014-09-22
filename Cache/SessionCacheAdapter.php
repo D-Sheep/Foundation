@@ -8,6 +8,8 @@
 namespace Foundation\Cache;
 
 
+use Phalcon\DI\FactoryDefault;
+
 class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
 
     const SESSION_COOKIE_KEY = 'SSID_sto';
@@ -21,10 +23,13 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
     /** @var \Phalcon\Cache\Backend */
     private $cache;
 
-    function __construct($options = null)
+    /** @var \Phalcon\DI\FactoryDefault */
+    private $_di;
+
+    function __construct(FactoryDefault $di, $options = null)
     {
         $this->is_started = false;
-        $di = \Phalcon\DI::getDefault();
+        $this->_di = $di;
         $dispatcher = $di->getDispatcher();
 
         $eventsManager = $di->getShared('eventsManager');
@@ -87,8 +92,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
     public function start()
     {
         $this->is_started = true;
-        $di = \Phalcon\DI::getDefault();
-        $cacheFactory = $di->getCacheFactory();
+        $cacheFactory = $this->_di->getCacheFactory();
         $this->cache = $cacheFactory->getCacheBackend("s_");
     }
 
