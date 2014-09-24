@@ -31,6 +31,7 @@ class ApiController extends Controller {
     const ERR_BAD_REQUEST = 400;
     const ERR_NOT_FOUND = 404;
     const ERR_BAD_INPUT = 402;
+    const ERR_FAILED = 401;
 
     private $isSigned;
 
@@ -163,6 +164,9 @@ class ApiController extends Controller {
 
             case self::ERR_BAD_REQUEST:
                 return "Bad request";
+
+            case self::ERR_FAILED:
+                return "Process has failed";
 
             default:
                 return "Server error";
