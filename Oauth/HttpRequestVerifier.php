@@ -8,6 +8,7 @@
 namespace Foundation\Oauth;
 
 
+use Foundation\Logger;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Url;
 
@@ -44,20 +45,11 @@ class HttpRequestVerifier implements IOauthSignable {
         return $this->url;
     }
 
-    /** @return \Phalcon\Logger\AdapterInterface */
-    public function getLogger(){
-        return $this->request->getDI()->getLogger();
-    }
-
     public function getSignatureBaseString(){
         $sig 	= array();
         $sig[]	= $this->request->getMethod();
         $sig[]	= $this->getNormalizedUrl();
         $sig[]	= $this->getNormalizedParams();
-
-        //$this->getLogger()->notice($this->request->getMethod());
-        //$this->getLogger()->notice($this->getNormalizedUrl());
-        //$this->getLogger()->notice($this->getNormalizedParams());
 
         return implode('&', array_map(array($this, 'oauthurlencode'), $sig));
     }
@@ -67,7 +59,6 @@ class HttpRequestVerifier implements IOauthSignable {
      */
     function getNormalizedUrl (){
         $uri = $this->getUrl();
-        //$this->getLogger()->notice("my url: ".var_export($uri, true));
         $url =  $uri->getScheme() . '://'
             . $uri->getUser() . (($uri->getPassword() != '') ? ':' : '')
             . $uri->getPassword() . (($uri->getUser() != '') ? '@' : '')
@@ -100,7 +91,6 @@ class HttpRequestVerifier implements IOauthSignable {
         array_multisort($keys, SORT_ASC, $values, SORT_ASC);
         */
         $params     = $this->encodedParams;
-        //$this->logger->notice("params ".var_export($params, true));
         $normalized = array();
 
         ksort($params);
@@ -241,10 +231,11 @@ class HttpRequestVerifier implements IOauthSignable {
             // If this is a post then also check the posted variables
             if ((strcasecmp($this->request->getMethod(), 'POST') == 0 || strcasecmp($this->request->getMethod(), 'PUT') == 0) && (!isset($return['xoauth_body_signature']) || !$return['xoauth_body_signature'])) {
 
-                // TODO: what to do with 'multipart/form-data'?
                 if ($this->getContentType() == 'multipart/form-data'|| strcasecmp($this->request->getMethod(), 'PUT') == 0) {
                     // Get the posted body (when available)
+                    // pro ziskani parametru použij request->getPut()
                     $parameters .= $this->getRequestBodyOfMultipart();
+
                 } else if ($this->getContentType() == 'application/x-www-form-urlencoded') {
                     // Get the posted body (when available)
                     $parameters .= str_replace(["+", "*", "%7E"], ["%20", "%2A", "~"], $this->getRequestBody());
@@ -299,10 +290,10 @@ class HttpRequestVerifier implements IOauthSignable {
 
             $this->encodedParams = $return;
         }
-        //$this->logger->notice("params  ".var_export($return, true));
-        //$this->getLogger()->commit();
         return $this->encodedParams;
     }
+
+
 
 
 
