@@ -11,6 +11,13 @@ namespace Foundation\Mvc;
 
 
 use Phalcon\Assets\Manager;
+use Foundation\Security\Authenticator;
+use Foundation\Security\Authoriser;
+use Foundation\Security\MemoryStorage;
+use Foundation\Security\SessionStorage;
+use Nette\Security\Security\User;
+use Phalcon\Http\Request;
+use Storyous\Core\Entities\Person;
 
 /**
  * Class Controller
@@ -21,7 +28,6 @@ use Phalcon\Assets\Manager;
  *
  */
 class Controller extends \Phalcon\Mvc\Controller {
-
 
 
     /**
@@ -37,8 +43,6 @@ class Controller extends \Phalcon\Mvc\Controller {
     protected function beforeRender() {
         $this->view->basePath = $this->getDi()->getUrl()->getBasePath();
     }
-
-
 
 
 }
