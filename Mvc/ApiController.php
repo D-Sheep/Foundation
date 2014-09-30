@@ -172,4 +172,8 @@ class ApiController extends Controller {
                 return "Server error";
         }
     }
+
+    public static function isRobot($userAgent) {
+        return preg_match("/(bot|facebook|googlebot|facebookexternalhit|twitterbot|crawler)/i", $userAgent);
+    }
 }
