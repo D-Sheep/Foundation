@@ -166,11 +166,11 @@ class HttpRequestVerifier implements IOauthSignable {
     }
 
     public function getEnc($s){
-        return $this->getParam($s,true);
+        return $this->getParam($s);
     }
 
     public function get($s){
-        return $this->getParam($s);
+        return $this->getParam($s,true);
     }
 
     /**
