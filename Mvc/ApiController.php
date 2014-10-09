@@ -32,6 +32,7 @@ class ApiController extends Controller {
     const ERR_NOT_FOUND = 404;
     const ERR_BAD_INPUT = 402;
     const ERR_FAILED = 401;
+    const ERR_NOT_AUTHORIZED = 403;
 
     private $isSigned;
 
@@ -66,13 +67,13 @@ class ApiController extends Controller {
         if ($forceSessionUser){
             return $this->di->getUser();
         }
+
         if ($this->_user === null){
             if ($this->isSigned()){
                 try {
                     $this->secrets = $this->di->getOAuthService()->verifyExtended();
                     $this->_oauthSecrets = $this->secrets;
-                    $person = Person::getSelect()->join('account')
-                        ->where('account_id= %i',$this->secrets->account_id)->fetchFirst();
+                    $person = $this->getDI()->getPersons()->getPersonByAcountId($this->secrets->account_id);
                 } catch (\Foundation\Oauth\OauthException $e) {
                     /*if ($this->getContext()->parameters['debugMode']) {
                         $this->payload->oauthError = $e->getMessage();
@@ -87,7 +88,7 @@ class ApiController extends Controller {
                      );
                 $this->di->set('user',$this->_user);
             } else {
-                $this->_user = $this->di->get('user');
+                $this->_user = $this->getDI()->getUser();
             }
         }
         return $this->_user;
@@ -95,14 +96,12 @@ class ApiController extends Controller {
 
     /** @return Person */
     public function getLoggedPerson(){
-        if ($this->getUser()->getIdentity()) {
-            if (!$this->_person) {
-                $this->_person = Person::getById($this->getUser()->getIdentity()->getId());
-            }
-            return $this->_person;
-        } else {
-            return null;
+
+        if (!$this->_person) {
+            $user = $this->getUser();
+            $this->_person = $user->getIdentity();
         }
+        return $this->_person;
     }
 
     /** @return Secrets */
@@ -117,16 +116,22 @@ class ApiController extends Controller {
 
     /** @return boolean */
     public function isSigned(){
-        if ($this->isSigned === null){
-            $this->isSigned = $this->getDI()->getHttpRequest()->isSigned();
-            if ($this->isSigned === null) {
-                $this->isSigned = "";
-                return false;
+        return false;
+        //@todo pro oauth
+        try {
+            if ($this->isSigned === null){
+                Logger::debug("login", "signed je null");
+                $di = $this->getDI();
+                $request = $di->getHttpRequest();
+                $signed = $request->isSigned();
+                Logger::debug("login", "api controler signed je ".var_export($signed, true));
+                $this->isSigned = $signed;
             }
-        } else if ($this->isSigned === ""){
-            return false;
+            Logger::debug("login", "api controler isSigned je ".var_export($this->isSigned, true));
+            return $this->isSigned;
+        } catch (\Exception $e){
+            throw $e;
         }
-        return $this->isSigned;
     }
 
     public function sendResponseOk() {
@@ -167,6 +172,9 @@ class ApiController extends Controller {
 
             case self::ERR_FAILED:
                 return "Process has failed";
+
+            case self::ERR_NOT_AUTHORIZED:
+                return "User has to be logged in.";
 
             default:
                 return "Server error";
