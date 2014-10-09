@@ -293,6 +293,14 @@ class HttpRequestVerifier implements IOauthSignable {
         return $this->encodedParams;
     }
 
+    /**
+     * @param $header
+     * @return string
+     */
+    public function getHeader($header){
+        return $this->request->getHeader($header);
+    }
+
 
 
 
@@ -319,18 +327,20 @@ class HttpRequestVerifier implements IOauthSignable {
         return $this->request->get('oauth_signature_method');
     }
 
+    /**
+     * @return bool
+     */
     public function isSigned(){
+        Logger::debug("login", "http: isSigned:start");
         if ($this->getParam('oauth_signature')){
             return true;
         }
+        Logger::debug("login", "http: neni oauth_signature");
 
         $hs = $this->request->getHeaders();
-        if (isset($hs['Authorization']) && strpos($hs['Authorization'], 'oauth_signature') !== false) {
-            $signed = true;
-        } else {
-            $signed = false;
-        }
+        $signed = (isset($hs['Authorization']) && strpos($hs['Authorization'], 'oauth_signature') !== false);
 
+        Logger::debug("login", "http: signed je ".var_export($signed, true));
         return $signed;
     }
 
