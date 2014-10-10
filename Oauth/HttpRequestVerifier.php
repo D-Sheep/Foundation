@@ -162,6 +162,9 @@ class HttpRequestVerifier implements IOauthSignable {
                 $s = $this->oauthurldecode($s);
             }
         }
+        if ($s === false) {
+            $s = null;
+        }
         return $s;
     }
 
