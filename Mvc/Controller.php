@@ -10,8 +10,6 @@
 namespace Foundation\Mvc;
 
 
-use Phalcon\Assets\Manager;
-
 /**
  * Class Controller
  * @package Foundation\Mvc
@@ -21,13 +19,6 @@ use Phalcon\Assets\Manager;
  *
  */
 class Controller extends \Phalcon\Mvc\Controller {
-
-
-
-    /**
-     * @var AssetsManager
-     */
-    //private $_assets;
 
     protected function initialize() {
 
