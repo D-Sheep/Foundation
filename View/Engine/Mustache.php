@@ -94,7 +94,6 @@ class Mustache extends Engine implements EngineInterface
         }, $t);
 
         if (sizeof($lifo)>0){
-            echo "ERROR<br>";
             throw new Exception("Bad sytax");
         }
         return $validatedText;
@@ -136,28 +135,6 @@ class Mustache extends Engine implements EngineInterface
         return $validatedText;
     }
 
-    /**
-     * @param $path
-     * @return mixed
-     */
-    /*public function getCachedTemplate($path, $stache = false) {
-         $res = preg_replace('/[\s]+/', ' ', file_get_contents($path));;
-
-         if ($stache) {
-             $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
-         } else {
-             $res = $this->callback($res);
-             if (preg_match("|{{#each|", $res)) {
-                 echo "<pre>";
-                 echo htmlspecialchars($res);
-                 exit();
-             }
-         }
-
-         return $res;
-     }*/
-
-
      public function getCachedTemplate($path, $stache = false) {
         $content = file_get_contents($path);
 
@@ -167,7 +144,6 @@ class Mustache extends Engine implements EngineInterface
         } else {
             $res = $this->solveCompatibility($content, "each");
             $res = $this->solveIfElseCompatibility($res);
-            Logger::debug("login", $res);
         }
 
         return $res;
