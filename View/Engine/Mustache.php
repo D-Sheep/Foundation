@@ -9,8 +9,10 @@
 
 namespace Foundation\View\Engine;
 
+use Foundation\Logger;
 use Phalcon\Mvc\View\Engine;
 use Phalcon\Mvc\View\EngineInterface;
+use Phalcon\Mvc\View\Exception;
 
 /**
  * Phalcon\Mvc\View\Engine\Mustache
@@ -67,28 +69,110 @@ class Mustache extends Engine implements EngineInterface
         }
     }
 
+    /**
+     * @param $t input text
+     * @param $what tag, for example each
+     * @return string
+     * @throws \Phalcon\Mvc\View\Exception
+     */
+    private function solveCompatibility($t, $what){
+        $pattern = '/{(#|\/)'.$what.'\s*([\w.]+\s*|)}/';
+        $lifo = array();
 
+        $validatedText = preg_replace_callback($pattern, function($matches) use ( &$lifo){
+
+            if ($matches[1] === '#' ) {
+                array_push($lifo, $matches[2]);
+                return '{#'.$matches[2].'}';
+
+            } else if ($matches[1] === '/') {
+                if (sizeof($lifo) < 1){
+                    throw new Exception("Bad sytax");
+                }
+                return '{/'.array_pop($lifo).'}';
+            }
+        }, $t);
+
+        if (sizeof($lifo)>0){
+            echo "ERROR<br>";
+            throw new Exception("Bad sytax");
+        }
+        return $validatedText;
+    }
+
+    /**
+     * @param $t input text
+     * @return string
+     * @throws \Phalcon\Mvc\View\Exception
+     */
+    private function solveIfElseCompatibility($t){
+        $pattern = '/{(#|\/)if\s*([\w.]+\s*|)}|{\s*else\s*}/';
+        $lifo = array();
+
+        $validatedText = preg_replace_callback($pattern, function($matches) use ( &$lifo){
+
+            if (!(sizeof($matches)>1) ){ //else
+                if (sizeof($lifo) < 1){
+                    throw new Exception("Bad sytax");
+                }
+                $name = $lifo[sizeof($lifo)-1];
+                $toOutput = '{/'.$name.'}}'.'{{^'.$name.'}';
+                return $toOutput;
+            } else if ($matches[1] === '#' ) {
+                array_push($lifo, $matches[2]);
+                return '{#'.$matches[2].'}';
+
+            } else if ($matches[1] === '/') {
+                if (sizeof($lifo) < 1){
+                    throw new Exception("Bad sytax");
+                }
+                return '{/'.array_pop($lifo).'}';
+            }
+        }, $t);
+
+        if (sizeof($lifo)>0){
+            throw new Exception("Bad sytax");
+        }
+        return $validatedText;
+    }
 
     /**
      * @param $path
      * @return mixed
      */
-    public function getCachedTemplate($path, $stache = false) {
-        $res = preg_replace('/[\s]+/', ' ', file_get_contents($path));;
+    /*public function getCachedTemplate($path, $stache = false) {
+         $res = preg_replace('/[\s]+/', ' ', file_get_contents($path));;
+
+         if ($stache) {
+             $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
+         } else {
+             $res = $this->callback($res);
+             if (preg_match("|{{#each|", $res)) {
+                 echo "<pre>";
+                 echo htmlspecialchars($res);
+                 exit();
+             }
+         }
+
+         return $res;
+     }*/
+
+
+     public function getCachedTemplate($path, $stache = false) {
+        $content = file_get_contents($path);
 
         if ($stache) {
+            $res = preg_replace('/[\s]+/', ' ', $content);
             $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
         } else {
-            $res = $this->callback($res);
-            if (preg_match("|{{#each|", $res)) {
-                echo "<pre>";
-                echo htmlspecialchars($res);
-                exit();
-            }
+            $res = $this->solveCompatibility($content, "each");
+            $res = $this->solveIfElseCompatibility($res);
+            Logger::debug("login", $res);
         }
 
         return $res;
     }
+
 
     public function callback($str) {
         if (is_array($str)) {
