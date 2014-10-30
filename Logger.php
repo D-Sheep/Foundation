@@ -71,7 +71,7 @@ class Logger {
 
     private static function isDirectory(){
         if (!is_dir(self::LOG_PATH)) {
-            throw new \RuntimeException("Directory '".self::LOG_PATH."' is not found or is not directory.");
+            throw new \RuntimeException("Directory '".realpath(self::LOG_PATH)."' is not found or is not directory.");
         }
     }
 
