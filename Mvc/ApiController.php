@@ -8,6 +8,7 @@
 namespace Foundation\Mvc;
 
 
+use Foundation\Logger;
 use Foundation\Oauth\CryptMethodFactory;
 use Foundation\Oauth\HttpRequestVerifier;
 use Foundation\Oauth\OAuthService;
