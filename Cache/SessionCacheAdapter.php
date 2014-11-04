@@ -7,7 +7,6 @@
 
 namespace Foundation\Cache;
 
-
 use Phalcon\DI\FactoryDefault;
 
 class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
@@ -36,11 +35,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
         $eventsManager->attach('dispatch', function($event, $dispatcher) use ($di) {
             if ($event->getType() == 'afterDispatch') {
                 $session = $di->getSession();
-                //$logger = $di->getLogger();
-                //$logger->notice("jdu ukladat session");
                 $session->__destruct();
-                //$logger->commit();
-                //$logger->close();
 
             }
         });
@@ -52,6 +47,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
         if ($this->_data == null ){
             return;
         }
+        //Logger::debug("login", $this->_data);
         foreach ($this->_data as $key => $value) {
             if ($value!=null) {
                 $this->cache->save($key,$value);
@@ -67,7 +63,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
                 $this->session_id = $_COOKIE[self::SESSION_COOKIE_KEY];
             } else {
                 $this->session_id = $this->generateSSID();
-                setcookie(self::SESSION_COOKIE_KEY, $this->session_id);
+                setcookie(self::SESSION_COOKIE_KEY, $this->session_id, 0, "/");//, "", $this->_di->getConfigurator()->isProduction());
             }
 
         }

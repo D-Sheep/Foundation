@@ -118,23 +118,15 @@ class ProcessContext extends \Fastorm\DataObject {
     }
 
     public function go() {
-        //$presenter = $presenter ? $presenter : \Nette\Environment::getApplication()->getPresenter();
-        //$logger->notice("ProcessContext: callback = ".$this->callback);
         if ($this->callback) {
-            //$logger->notice("ProcessContext: jsem v ifu");
             $url = $this->callback;
             $this->callback = null;
-            //$response = new \Phalcon\Http\Response();
-
-            //$logger->notice("ProcessContext: url = ".$url);
 
             /* kdyby se nepředávala flash zpráva od minula
              * if ($presenter->hasFlashSession()) {
                 $sign = strpos($url, "?")===false?"?":"&";
                 $url .= $sign . \Nette\Application\UI\Presenter::FLASH_KEY . "=" .urlencode($presenter->getParameter(\Nette\Application\UI\Presenter::FLASH_KEY));
             }*/
-            //interni redirect
-            //$response->redirect($url);
             return $url;
         }
     }
@@ -144,11 +136,7 @@ class ProcessContext extends \Fastorm\DataObject {
         if ($goBackToCurrentPage) {
             $this->setCallback($url->get(array('for' => 'this', 'sal'=>$this->id)));
         }
-        //$r = new Response();
-        //$r->redirect("api/login/".$this->id);
         return $this->id;
-        //return $r;
-        //$presenter->redirect(':Front:SignUp:default', array('id'=>  $this->id));
     }
 
 

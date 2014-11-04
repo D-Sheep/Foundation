@@ -19,6 +19,7 @@ use Nette\Security\Security\User;
 use Phalcon\Http\Request;
 use Storyous\Core\Entities\Person;
 
+
 /**
  * Class Controller
  * @package Foundation\Mvc
@@ -28,12 +29,6 @@ use Storyous\Core\Entities\Person;
  *
  */
 class Controller extends \Phalcon\Mvc\Controller {
-
-
-    /**
-     * @var AssetsManager
-     */
-    //private $_assets;
 
     protected function initialize() {
 

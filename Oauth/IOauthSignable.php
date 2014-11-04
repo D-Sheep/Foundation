@@ -10,11 +10,7 @@ namespace Foundation\Oauth;
 
 interface IOauthSignable {
     public function getSignatureBaseString();
-    //public function getToken();
-    //public function getSignature();
     public function isSigned();
-    //public function getConsumerKey();
-    //public function getSignatureMethod();
     public function oauthurldecode ( $s );
     public function oauthurlencode ( $s );
     public function getParam($s, $urldecode = false );
