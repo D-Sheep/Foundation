@@ -63,7 +63,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
                 $this->session_id = $_COOKIE[self::SESSION_COOKIE_KEY];
             } else {
                 $this->session_id = $this->generateSSID();
-                setcookie(self::SESSION_COOKIE_KEY, $this->session_id, 0, "/");//, "", $this->_di->getConfigurator()->isProduction());
+                setcookie(self::SESSION_COOKIE_KEY, $this->session_id, 0, "/");//, "",!$this->_di->getConfigurator()->isProduction());
             }
 
         }
