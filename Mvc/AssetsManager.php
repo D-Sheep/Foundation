@@ -76,6 +76,7 @@ class AssetsManager {
     public function initialize($assets){
         if($this->configurator->isDebug() && !$this->configurator->isTestingCache() ){
             $this->setCssAndJs($assets);
+        //use as production
         } else {
             /* @var \Phalcon\Cache\Backend $cache */
             $cache = $this->cacheFactory->getCacheBackend('assets');
@@ -89,7 +90,8 @@ class AssetsManager {
 
             if ($filename === null){
                 $collection->addFilter(new LessFilter( "css"))
-                            ->addFilter(new Cssmin());
+                            ->addFilter(new Cssmin())
+                        ->join(true);
                 $this->generateCollectionWithCache($collection, $cache, $cacheName, "css");
             } else {
                 //waits until its generated
@@ -100,7 +102,8 @@ class AssetsManager {
                 $filepath = $this->destinationFolder . "/" . $filename;
                 if (!file_exists($filepath)) {
                     $collection->addFilter(new LessFilter( "css"))
-                                ->addFilter(new Cssmin());
+                                ->addFilter(new Cssmin())
+                            ->join(true);
                     $this->generateCollectionWithCache($collection, $cache, $cacheName, "css");
                 } else {
                     $collection->addCss($this->destinationFolder . "/" . $filename );
@@ -145,8 +148,7 @@ class AssetsManager {
         $name = $this->getFilename($cacheName) . '.' . $suffix;
         $collection
             ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/" . $name)
-            ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash())
-            ->join(true);
+            ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash());
         if($suffix== "css"){
             $this->generateContent($collection, $this->css->getFolders(),
                 $suffix . "/", true);
@@ -162,35 +164,39 @@ class AssetsManager {
 
         //css
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
-        $collection->addFilter(new LessFilter("css"))
-            ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
-            ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash())
-            ->addFilter(new Cssmin())
-            ->join(true);
-        $this->generateContent($collection, $this->css->getFolders(),
-            "css/", true);
+        if (file_exists(WWW_DIR . "/" . $this->destinationFolder . "/general.css")){
+            $upToDate = $this->generateContent($collection, $this->css->getFolders(),
+                "css/", true, true, WWW_DIR . "/" . $this->destinationFolder . "/general.css");
+        } else {
+            $upToDate = false;
+        }
+
+        if ($upToDate) {
+            $collection->addCss( $this->destinationFolder . "/general.css");
+        } else {
+            $collection->addFilter(new LessFilter("css"))
+                ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
+                ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash());
+            $this->generateContent($collection, $this->css->getFolders(),
+                "css/", true);
+        }
 
         //js
         $collection = $assets->collection(self::ASSETS_COLLECTION_FOOTER);
         $collection = $this->generateContent($collection, $this->js->getFolders(),
-            //realpath($this->getDestinationPath() . "/js")."/", false);
-             "js/", false);
+            "js/", false);
         $this->applyFilters($collection, $this->js->getFilters());
     }
 
     /*
-     * Generetes assCss/addJs of files to colection over $folders
+     * Generetes addCss/addJs of files to colection over $folders
      * @var Collection $collection Collection from assets
      * @var array $folders Strings of folder names
      * @var path $path Path to root folder of folders
      * @var boolean $css Indicates if css or js
      */
-    private function generateContent( $collection, $folders, $path, $css){
+    private function generateContent( $collection, $folders, $path, $css, $upToDate = false, $generalPath = null){
         /* @var Collection $collection */
-
-        //$files=[];
-        /*$files[]= " folders: " . implode(", ", $folders);
-        $files[]= " path: " . $path;*/
         foreach ($folders as $folder){
             $folderPath = $path . $folder;
             $subfolders[] = $folderPath;
@@ -199,7 +205,6 @@ class AssetsManager {
                 $folderPath = array_pop($subfolders);
                 if (is_file($folderPath)){
                     $array[] = $folderPath;
-                    //$files[] = $folderPath;
                 } else if ($handle = opendir($folderPath)) {
                     while (false !== ($file = readdir($handle))) {
                         if ($file == '.' || $file == '..') {
@@ -208,7 +213,6 @@ class AssetsManager {
                         $file  = $folderPath  . "/" . $file;
                         if (is_file($file)){
                             $array[] = $file;
-                            //$files[] = $file;
                         } else {
                             array_push($subfolders, $file);
                         }
@@ -235,22 +239,23 @@ class AssetsManager {
             });
 
             foreach($array as $item) {
-                if ($css && preg_match('/\.(css|less)$/', $item)) {
-                    $collection->addCss($item);
+                if ($css && preg_match('/\.(css|less)$/', $item)) { //css
+                    if ($upToDate){
+                        if (filemtime($item)>filemtime($generalPath)) {
+                            return false;
+                        }
+                    } else {
+                        $collection->addCss($item);
+                    }
                 } else if (!$css && preg_match('/\.js$/', $item)) { //js
                     $collection->addJs($item);
                 }
             }
 
         }
-
-
-
-        /*if($css){
-            $this->cache->setCache("cssfiles", $files);
-        } else {
-            $this->cache->setCache("jsfiles", $files);
-        }*/
+        if ($upToDate){
+            return true;
+        }
         return $collection;
     }
 
