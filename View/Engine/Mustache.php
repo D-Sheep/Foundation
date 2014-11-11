@@ -26,6 +26,11 @@ class Mustache extends Engine implements EngineInterface
      */
     protected $mustache;
 
+    /*
+     * Phalcon\DiInterface
+     */
+    protected $_di;
+
     /**
      * Class constructor.
      *
@@ -37,6 +42,9 @@ class Mustache extends Engine implements EngineInterface
         $this->mustache = new \Mustache_Engine();
         $loader = new MustachePartialsLoader($view, $this);
         $this->mustache->setPartialsLoader($loader);
+        if ($dependencyInjector !== null) {
+            $this->_di = $dependencyInjector;
+        }
 
         $this->mustache->addHelper('uppercase', function($value) {
             return strtoupper((string) $value);
@@ -135,15 +143,21 @@ class Mustache extends Engine implements EngineInterface
         return $validatedText;
     }
 
-     public function getCachedTemplate($path, $stache = false) {
+    /**
+     * @param $path
+     * @param bool $stache
+     * @return mixed|string
+     */
+    public function getCachedTemplate($path, $stache = false) {
         $content = file_get_contents($path);
 
+        // pro kazdej jazyk + jazykovou mutaci
         if ($stache) {
             $res = preg_replace('/[\s]+/', ' ', $content);
             $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
         } else {
-            $res = $this->solveCompatibility($content, "each");
-            $res = $this->solveIfElseCompatibility($res);
+            $res = $this->solveCompatibility($content, "each"); // each
+            $res = $this->solveIfElseCompatibility($res); // if else
         }
 
         return $res;

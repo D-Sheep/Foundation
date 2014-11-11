@@ -7,6 +7,7 @@
 
 namespace Foundation\Cache;
 
+use Foundation\Logger;
 use Phalcon\DI\FactoryDefault;
 
 class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
@@ -47,7 +48,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
         if ($this->_data == null ){
             return;
         }
-        //Logger::debug("login", $this->_data);
+
         foreach ($this->_data as $key => $value) {
             if ($value!=null) {
                 $this->cache->save($key,$value);
