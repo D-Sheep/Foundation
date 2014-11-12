@@ -18,6 +18,7 @@ use Phalcon\Mvc\Router;
 class LangRouter extends Router {
 
     const LANG_PARAM = 'lang';
+    const ALIAS_PARAM = 'alias';
 
     /**
      * @var \Foundation\Localization\ILangService
@@ -42,10 +43,22 @@ class LangRouter extends Router {
         if ($route !== null) {
             $paths = $route->getPaths();
             $isLanguageRoute = array_key_exists(self::LANG_PARAM, $paths);
+            $isAliasRoute = array_key_exists(self::ALIAS_PARAM, $paths);
         } else {
             $isLanguageRoute = false;
         }
 
+        if ($isLanguageRoute && $isAliasRoute)
+        {
+            $aliases = $this->lang->getAliases($lang);
+            $alias = $dispatcher->getParam(self::ALIAS_PARAM);
+            if ($alias && isset($aliases[$alias]))
+            {
+                $dispatcher->setControllerName($aliases[$alias]['controller']);
+                $dispatcher->setActionName($aliases[$alias]['action']);
+            }
+        }
+        else
         if ($isLanguageRoute
                 && !$this->isVisitedByRobot()
                 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {

@@ -18,4 +18,6 @@ interface ILangService {
 
     public function translate($variable, $lang = null);
 
+    public function getAliases($lang);
+
 }
