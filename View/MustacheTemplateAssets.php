@@ -28,17 +28,24 @@ class MustacheTemplateAssets {
     protected $cache;
 
     /**
-     * @var View\Engine\Mustache
+     * @var \Foundation\View\Engine\Mustache
      */
     private $_mustache;
 
-    function __construct(Backend $cache, View $view)
-    {
+    private $_di;
+
+    //@todo cache neni potřeba?!
+    function __construct(Backend $cache, View $view, $di = null) {
         $this->cache = $cache;
         $this->view = $view;
+        $this->_di = $di;
     }
 
-    public function getFormattedTemplateAsset($lang) {
+    /**
+     * @param $lang
+     * @return array
+     */
+    public function getFormattedTemplateAsset() {
         return $this->getAssetsArray();
     }
 
@@ -70,11 +77,11 @@ class MustacheTemplateAssets {
     }
 
     /**
-     * @return View\Engine\Mustache
+     * @return \Foundation\View\Engine\Mustache
      */
     protected function getMustache() {
         if ($this->_mustache === null) {
-            $this->_mustache = new Mustache($this->view);
+            $this->_mustache = new Mustache($this->view, $this->_di);
         }
         return $this->_mustache;
     }

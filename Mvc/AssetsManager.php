@@ -118,8 +118,7 @@ class AssetsManager {
             $filename = $cache->get( $cacheName );
 
             if ($filename === null){
-                $collection->addFilter(new Jsmin())
-                            ->join(true);
+                $collection->addFilter(new Jsmin());
                 $this->generateCollectionWithCache($collection, $cache, $cacheName, "js");
                 $this->applyFilters($collection, $this->js->getFilters());
             } else {
@@ -130,8 +129,7 @@ class AssetsManager {
                 }
                 $filepath = $this->destinationFolder . "/" . $filename;
                 if (!file_exists($filepath)) {
-                    $collection->addFilter(new Jsmin())
-                        ->join(true);
+                    $collection->addFilter(new Jsmin());
                     $this->generateCollectionWithCache($collection, $cache, $cacheName, "js");
                     $this->applyFilters($collection, $this->js->getFilters());
                 } else {
@@ -148,7 +146,8 @@ class AssetsManager {
         $name = $this->getFilename($cacheName) . '.' . $suffix;
         $collection
             ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/" . $name)
-            ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash());
+            ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash())
+            ->join(true);
         if($suffix== "css"){
             $this->generateContent($collection, $this->css->getFolders(),
                 $suffix . "/", true);
@@ -164,6 +163,8 @@ class AssetsManager {
 
         //css
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
+
+        //set up to date
         if (file_exists(WWW_DIR . "/" . $this->destinationFolder . "/general.css")){
             $upToDate = $this->generateContent($collection, $this->css->getFolders(),
                 "css/", true, true, WWW_DIR . "/" . $this->destinationFolder . "/general.css");
@@ -176,7 +177,8 @@ class AssetsManager {
         } else {
             $collection->addFilter(new LessFilter("css"))
                 ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
-                ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash());
+                ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash())
+                ->join(true);
             $this->generateContent($collection, $this->css->getFolders(),
                 "css/", true);
         }

@@ -13,13 +13,18 @@ use Foundation\Logger;
 use Phalcon\Mvc\View\Engine;
 use Phalcon\Mvc\View\EngineInterface;
 use Phalcon\Mvc\View\Exception;
+use Phalcon\DI\InjectionAwareInterface;
+use Phalcon\DiInterface;
 
 /**
  * Phalcon\Mvc\View\Engine\Mustache
  * Adapter to use Mustache library as templating engine
  */
-class Mustache extends Engine implements EngineInterface
+class Mustache extends Engine implements EngineInterface, InjectionAwareInterface
 {
+
+    const STACHE = "stache";
+    const MUSTACHE = "mustache";
 
     /**
      * @var \Mustache_Engine
@@ -30,6 +35,34 @@ class Mustache extends Engine implements EngineInterface
      * Phalcon\DiInterface
      */
     protected $_di;
+
+    /**
+     * @param Phalcon\Cache\Backend
+     */
+    protected $_cache;
+
+    /**
+     * @param DiInterface $di
+     */
+    public function setDi($di)
+    {
+        $this->_di = $di;
+    }
+
+    /**
+     * @return DiInterface
+     */
+    public function getDi()
+    {
+        return $this->_di;
+    }
+
+    private function getCache(){
+        if ($this->_cache === null) {
+            $this->_cache = $this->getDi()->getCacheFactory()->getCacheBackend("template");
+        }
+        return $this->_cache;
+    }
 
     /**
      * Class constructor.
@@ -43,7 +76,7 @@ class Mustache extends Engine implements EngineInterface
         $loader = new MustachePartialsLoader($view, $this);
         $this->mustache->setPartialsLoader($loader);
         if ($dependencyInjector !== null) {
-            $this->_di = $dependencyInjector;
+            $this->setDi($dependencyInjector);
         }
 
         $this->mustache->addHelper('uppercase', function($value) {
@@ -112,7 +145,7 @@ class Mustache extends Engine implements EngineInterface
      * @return string
      * @throws \Phalcon\Mvc\View\Exception
      */
-    private function solveIfElseCompatibility($t){
+    private function solveIfElseCompatibility($text){
         $pattern = '/{(#|\/)if\s*([\w.]+\s*|)}|{\s*else\s*}/';
         $lifo = array();
 
@@ -135,11 +168,21 @@ class Mustache extends Engine implements EngineInterface
                 }
                 return '{/'.array_pop($lifo).'}';
             }
-        }, $t);
+        }, $text);
 
         if (sizeof($lifo)>0){
             throw new Exception("Bad sytax");
         }
+        return $validatedText;
+    }
+
+    private function solveTranslations($text, $lang){
+        $pattern = '/{_[\'"](.+)[\'"]}/';
+        $langService = $this->getDi()->getLang();
+        $validatedText = preg_replace_callback($pattern, function($matches) use ($langService, $lang){
+            return $langService->translate($matches[1], $lang);
+        }, $text);
+
         return $validatedText;
     }
 
@@ -149,20 +192,43 @@ class Mustache extends Engine implements EngineInterface
      * @return mixed|string
      */
     public function getCachedTemplate($path, $stache = false) {
-        $content = file_get_contents($path);
 
-        // pro kazdej jazyk + jazykovou mutaci
-        if ($stache) {
-            $res = preg_replace('/[\s]+/', ' ', $content);
-            $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
+        $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
+        $cache = $this->getCache();
+
+        $cacheName = $this->getNameOfCache($path, $stache, $lang);
+
+        //cached
+        if ($cache->exists($cacheName)){
+            return $cache->get($cacheName);
         } else {
-            $res = $this->solveCompatibility($content, "each"); // each
-            $res = $this->solveIfElseCompatibility($res); // if else
-        }
+            $content = file_get_contents($path);
+            // stache
+            if ($stache) {
+                $res = preg_replace('/[\s]+/', ' ', $content);
+                $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
 
-        return $res;
+            // mustache
+            } else {
+                $res = $this->solveCompatibility($content, "each"); // each
+                $res = $this->solveIfElseCompatibility($res); // if else
+            }
+            // translation for lang
+            $res = $this->solveTranslations($res, $lang);
+            //sace in cahe
+            $cache->save($cacheName, $res);
+
+            return $res;
+        }
     }
 
+    private function sanitazeForFilename($name){
+        return preg_replace("([^\w\s\d\-_~,;:\[\]\(\).]|[\.]{2,})", '', $name);
+    }
+
+    private function getNameOfCache($path, $stache, $lang){
+        return $this->sanitazeForFilename($path)."_".($stache ? self::STACHE : self::MUSTACHE)."_".$lang;
+    }
 
     public function callback($str) {
         if (is_array($str)) {
