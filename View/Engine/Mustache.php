@@ -177,13 +177,21 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
     }
 
     private function solveTranslations($text, $lang){
-        $pattern = '/{_[\'"](.+)[\'"]}/';
-        $langService = $this->getDi()->getLang();
-        $validatedText = preg_replace_callback($pattern, function($matches) use ($langService, $lang){
-            return $langService->translate($matches[1], $lang);
-        }, $text);
-
-        return $validatedText;
+        $pattern = '/{_[\'"]([^{}"\']+)[\'"]}/';
+        preg_match_all($pattern, $text, $match_all);
+        if (isset($match_all[1]) && sizeof($match_all[1])>0) {
+            $langService = $this->getDi()->getLang();
+            Logger::debug("login", $match_all);
+            Logger::debug("login", $match_all[1]);
+            $translations = $langService->translate($match_all[1], $lang);
+            $i = -1;
+            return preg_replace_callback($pattern, function($match_replace) use (&$i, $translations){
+                $i++;
+                return $translations[$i];
+            }, $text);
+        } else {
+            return $text;
+        }
     }
 
     /**
@@ -199,7 +207,8 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         $cacheName = $this->getNameOfCache($path, $stache, $lang);
 
         //cached
-        if ($cache->exists($cacheName)){
+        if ($cache->exists($cacheName) && false) {//filemtime($path)< filemtime($cacheName) ){
+
             return $cache->get($cacheName);
         } else {
             $content = file_get_contents($path);
