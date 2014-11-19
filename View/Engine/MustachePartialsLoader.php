@@ -42,6 +42,10 @@ class MustachePartialsLoader implements \Mustache_Loader {
      */
     public function load($name, $stache = false)
     {
+        $m = null;
+        if (preg_match("#([a-z0-9]+/[a-z0-9]+)$#i", $name, $m)) {
+            $name = $m[1];
+        }
         return $this->mustache->getCachedTemplate($this->viewsDir . $name . '.mustache', $stache);
     }
 
