@@ -26,7 +26,8 @@ class Controller extends \Phalcon\Mvc\Controller {
     }
 
     protected function beforeRender() {
-        $this->view->basePath = $this->getDi()->getUrl()->getBasePath();
+        $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
+        $this->view->basePath = $this->getDi()->getUrl()->getBasePath().$lang."/";
     }
 
 
