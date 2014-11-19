@@ -181,8 +181,6 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         preg_match_all($pattern, $text, $match_all);
         if (isset($match_all[1]) && sizeof($match_all[1])>0) {
             $langService = $this->getDi()->getLang();
-            Logger::debug("login", $match_all);
-            Logger::debug("login", $match_all[1]);
             $translations = $langService->translate($match_all[1], $lang);
             $i = -1;
             return preg_replace_callback($pattern, function($match_replace) use (&$i, $translations){
