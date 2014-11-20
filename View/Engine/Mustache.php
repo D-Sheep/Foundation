@@ -227,11 +227,7 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
 
     protected function createCachedTemplate($basePath, $lang, $folder, $filename, $data){
         try {
-            $langDir = $basePath . "/" . $lang;
-            if (!file_exists($langDir)) {
-                mkdir($langDir, 0777, true);
-            }
-            $folderDir = $langDir . '/' . $folder;
+            $folderDir = $basePath . "/" . $lang . '/' . $folder;
             if (!file_exists($folderDir)) {
                 mkdir($folderDir, 0777, true);
             }
