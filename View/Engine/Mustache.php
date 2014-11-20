@@ -195,9 +195,12 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
         $folder = $match_all[1];
         $filename = $match_all[2].($stache ? ".stache" : ".mustache");
-
-        $cachedPath = $basePath."/".$lang."/".$folder."/".$filename;
         $isProduction = $this->getDi()->getConfigurator()->isProduction();
+        $cachingFolder = "";
+        if(!$isProduction){
+            $cachingFolder = "cached_templates/";
+        }
+        $cachedPath = $basePath."/".$lang."/".$cachingFolder.$folder."/".$filename;
 
         try {
             if (($isProduction && file_exists($cachedPath)) || ((!$isProduction) && file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path))){
@@ -217,7 +220,7 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
                 // translation for lang
                 $res = $this->solveTranslations($res, $lang);
                 //save to file
-                $this->createCachedTemplate($basePath, $lang, $folder, $filename, $res);
+                $this->createCachedTemplate($basePath, $lang, $cachingFolder, $folder, $filename, $res);
                 return $res;
             }
         } catch (\Exception $e) {
@@ -225,9 +228,17 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         }
     }
 
-    protected function createCachedTemplate($basePath, $lang, $folder, $filename, $data){
+    protected function createCachedTemplate($basePath, $lang, $firstFolder, $folder, $filename, $data){
         try {
-            $folderDir = $basePath . "/" . $lang . '/' . $folder;
+            $dir = $basePath . "/" . $lang;
+            if ($firstFolder !== ""){
+                $dir = $dir . "/" . $firstFolder;
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+            }
+
+            $folderDir = $dir . '/' . $folder;
             if (!file_exists($folderDir)) {
                 mkdir($folderDir, 0777, true);
             }
