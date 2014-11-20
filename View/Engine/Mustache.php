@@ -197,10 +197,10 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         $filename = $match_all[2].($stache ? ".stache" : ".mustache");
 
         $cachedPath = $basePath."/".$lang."/".$folder."/".$filename;
+        $isProduction = $this->getDi()->getConfigurator()->isProduction();
 
         try {
-            if (file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path)){
-                Logger::debug("login", "cached ".$cachedPath);
+            if (($isProduction && file_exists($cachedPath)) || ((!$isProduction) && file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path))){
                 return file_get_contents($cachedPath);
             } else {
                 $content = file_get_contents($path);
@@ -218,7 +218,6 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
                 $res = $this->solveTranslations($res, $lang);
                 //save to file
                 $this->createCachedTemplate($basePath, $lang, $folder, $filename, $res);
-                Logger::debug("login", "generated ".$cachedPath);
                 return $res;
             }
         } catch (\Exception $e) {
