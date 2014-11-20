@@ -37,11 +37,6 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
     protected $_di;
 
     /**
-     * @param Phalcon\Cache\Backend
-     */
-    protected $_cache;
-
-    /**
      * @param DiInterface $di
      */
     public function setDi($di)
@@ -55,13 +50,6 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
     public function getDi()
     {
         return $this->_di;
-    }
-
-    private function getCache(){
-        if ($this->_cache === null) {
-            $this->_cache = $this->getDi()->getCacheFactory()->getCacheBackend("template");
-        }
-        return $this->_cache;
     }
 
     /**
@@ -198,43 +186,60 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
      * @return mixed|string
      */
     public function getCachedTemplate($path, $stache = false) {
+        $isMatched = preg_match("/(\w+)\/(\w+).mustache$/", $path, $match_all);
 
+        if ($isMatched === false){
+            new Exception("Path doesn't match format");
+        }
+        $basePath = realpath(APP_DIR ."/../public/");
         $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
-        $cache = $this->getCache();
+        $folder = $match_all[1];
+        $filename = $match_all[2].($stache ? ".stache" : ".mustache");
 
-        $cacheName = $this->getNameOfCache($path, $stache, $lang);
+        $cachedPath = $basePath."/".$lang."/".$folder."/".$filename;
 
-        //cached
-        if ($cache->exists($cacheName) && false) {//filemtime($path)< filemtime($cacheName) ){
-
-            return $cache->get($cacheName);
-        } else {
-            $content = file_get_contents($path);
-            // stache
-            if ($stache) {
-                $res = preg_replace('/[\s]+/', ' ', $content);
-                $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
-
-            // mustache
+        try {
+            if (file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path)){
+                Logger::debug("login", "cached ".$cachedPath);
+                return file_get_contents($cachedPath);
             } else {
-                $res = $this->solveCompatibility($content, "each"); // each
-                $res = $this->solveIfElseCompatibility($res); // if else
-            }
-            // translation for lang
-            $res = $this->solveTranslations($res, $lang);
-            //sace in cahe
-            $cache->save($cacheName, $res);
+                $content = file_get_contents($path);
+                // stache
+                if ($stache) {
+                    $res = preg_replace('/[\s]+/', ' ', $content);
+                    $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
 
-            return $res;
+                // mustache
+                } else {
+                    $res = $this->solveCompatibility($content, "each"); // each
+                    $res = $this->solveIfElseCompatibility($res); // if else
+                }
+                // translation for lang
+                $res = $this->solveTranslations($res, $lang);
+                //save to file
+                $this->createCachedTemplate($basePath, $lang, $folder, $filename, $res);
+                Logger::debug("login", "generated ".$cachedPath);
+                return $res;
+            }
+        } catch (\Exception $e) {
+            throw $e;
         }
     }
 
-    private function sanitazeForFilename($name){
-        return preg_replace("([^\w\s\d\-_~,;:\[\]\(\).]|[\.]{2,})", '', $name);
-    }
-
-    private function getNameOfCache($path, $stache, $lang){
-        return $this->sanitazeForFilename($path)."_".($stache ? self::STACHE : self::MUSTACHE)."_".$lang;
+    protected function createCachedTemplate($basePath, $lang, $folder, $filename, $data){
+        try {
+            $langDir = $basePath . "/" . $lang;
+            if (!file_exists($langDir)) {
+                mkdir($langDir, 0777, true);
+            }
+            $folderDir = $langDir . '/' . $folder;
+            if (!file_exists($folderDir)) {
+                mkdir($folderDir, 0777, true);
+            }
+            file_put_contents($folderDir."/".$filename, $data);
+        } catch (\Exception $e) {
+            throw new Exception("Path doesn't match format");
+        }
     }
 
     public function callback($str) {
