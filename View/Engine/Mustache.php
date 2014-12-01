@@ -13,18 +13,44 @@ use Foundation\Logger;
 use Phalcon\Mvc\View\Engine;
 use Phalcon\Mvc\View\EngineInterface;
 use Phalcon\Mvc\View\Exception;
+use Phalcon\DI\InjectionAwareInterface;
+use Phalcon\DiInterface;
 
 /**
  * Phalcon\Mvc\View\Engine\Mustache
  * Adapter to use Mustache library as templating engine
  */
-class Mustache extends Engine implements EngineInterface
+class Mustache extends Engine implements EngineInterface, InjectionAwareInterface
 {
+
+    const STACHE = "stache";
+    const MUSTACHE = "mustache";
 
     /**
      * @var \Mustache_Engine
      */
     protected $mustache;
+
+    /*
+     * Phalcon\DiInterface
+     */
+    protected $_di;
+
+    /**
+     * @param DiInterface $di
+     */
+    public function setDi($di)
+    {
+        $this->_di = $di;
+    }
+
+    /**
+     * @return DiInterface
+     */
+    public function getDi()
+    {
+        return $this->_di;
+    }
 
     /**
      * Class constructor.
@@ -37,6 +63,9 @@ class Mustache extends Engine implements EngineInterface
         $this->mustache = new \Mustache_Engine();
         $loader = new MustachePartialsLoader($view, $this);
         $this->mustache->setPartialsLoader($loader);
+        if ($dependencyInjector !== null) {
+            $this->setDi($dependencyInjector);
+        }
 
         $this->mustache->addHelper('uppercase', function($value) {
             return strtoupper((string) $value);
@@ -104,7 +133,7 @@ class Mustache extends Engine implements EngineInterface
      * @return string
      * @throws \Phalcon\Mvc\View\Exception
      */
-    private function solveIfElseCompatibility($t){
+    private function solveIfElseCompatibility($text){
         $pattern = '/{(#|\/)if\s*([\w.]+\s*|)}|{\s*else\s*}/';
         $lifo = array();
 
@@ -127,7 +156,7 @@ class Mustache extends Engine implements EngineInterface
                 }
                 return '{/'.array_pop($lifo).'}';
             }
-        }, $t);
+        }, $text);
 
         if (sizeof($lifo)>0){
             throw new Exception("Bad sytax");
@@ -135,20 +164,89 @@ class Mustache extends Engine implements EngineInterface
         return $validatedText;
     }
 
-     public function getCachedTemplate($path, $stache = false) {
-        $content = file_get_contents($path);
-
-        if ($stache) {
-            $res = preg_replace('/[\s]+/', ' ', $content);
-            $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
+    private function solveTranslations($text, $lang){
+        $pattern = '/{_[\'"]([^{}"\']+)[\'"]}/';
+        preg_match_all($pattern, $text, $match_all);
+        if (isset($match_all[1]) && sizeof($match_all[1])>0) {
+            $langService = $this->getDi()->getLang();
+            $translations = $langService->translate($match_all[1], $lang);
+            $i = -1;
+            return preg_replace_callback($pattern, function($match_replace) use (&$i, $translations){
+                $i++;
+                return $translations[$i];
+            }, $text);
         } else {
-            $res = $this->solveCompatibility($content, "each");
-            $res = $this->solveIfElseCompatibility($res);
+            return $text;
         }
-
-        return $res;
     }
 
+    /**
+     * @param $path
+     * @param bool $stache
+     * @return mixed|string
+     */
+    public function getCachedTemplate($path, $stache = false) {
+        $isMatched = preg_match("/(\w+)\/(\w+).mustache$/", $path, $match_all);
+
+        if ($isMatched === false){
+            new Exception("Path doesn't match format");
+        }
+        $basePath = realpath(APP_DIR ."/../public/");
+        $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
+        $folder = $match_all[1];
+        $filename = $match_all[2].($stache ? ".stache" : ".mustache");
+        $isProduction = $this->getDi()->getConfigurator()->isProduction();
+        $cachingFolder = "";
+        if(!$isProduction){
+            $cachingFolder = "cached_templates/";
+        }
+        $cachedPath = $basePath."/".$lang."/".$cachingFolder.$folder."/".$filename;
+
+        try {
+            if (($isProduction && file_exists($cachedPath)) || ((!$isProduction) && file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path))){
+                return file_get_contents($cachedPath);
+            } else {
+                $content = file_get_contents($path);
+                // stache
+                if ($stache) {
+                    $res = preg_replace('/[\s]+/', ' ', $content);
+                    $res = preg_replace('/{{\s?([^\s\|]+)\s?\|\s?([^\s}]+)\s?}}/i', '{{\\2 \\1}}', $res);
+
+                // mustache
+                } else {
+                    $res = $this->solveCompatibility($content, "each"); // each
+                    $res = $this->solveIfElseCompatibility($res); // if else
+                }
+                // translation for lang
+                $res = $this->solveTranslations($res, $lang);
+                //save to file
+                $this->createCachedTemplate($basePath, $lang, $cachingFolder, $folder, $filename, $res);
+                return $res;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    protected function createCachedTemplate($basePath, $lang, $firstFolder, $folder, $filename, $data){
+        try {
+            $dir = $basePath . "/" . $lang;
+            if ($firstFolder !== ""){
+                $dir = $dir . "/" . $firstFolder;
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+            }
+
+            $folderDir = $dir . '/' . $folder;
+            if (!file_exists($folderDir)) {
+                mkdir($folderDir, 0777, true);
+            }
+            file_put_contents($folderDir."/".$filename, $data);
+        } catch (\Exception $e) {
+            throw new Exception("Path doesn't match format");
+        }
+    }
 
     public function callback($str) {
         if (is_array($str)) {

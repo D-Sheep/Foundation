@@ -21,6 +21,7 @@ use Nette\Security\Security\User;
 use Phalcon\Http\Request;
 use Phalcon\Mvc\Controller;
 use Storyous\Core\Entities\Account;
+use Storyous\Core\Lang\LazyTString;
 use Storyous\Oauth\OauthStore;
 use Storyous\Core\Entities\Person;
 use Storyous\Security\AuthenticatorStorage;
