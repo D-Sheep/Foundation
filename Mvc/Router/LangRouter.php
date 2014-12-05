@@ -9,7 +9,6 @@
 
 namespace Foundation\Mvc\Router;
 
-
 use Foundation\Localization\ILangService;
 use Foundation\Mvc\Dispatcher;
 use Phalcon\Events\Event;
@@ -17,72 +16,68 @@ use Phalcon\Mvc\Router;
 
 class LangRouter extends Router {
 
-    const LANG_PARAM = 'lang';
-    const ALIAS_PARAM = 'alias';
+	const LANG_PARAM = 'lang';
 
-    /**
-     * @var \Foundation\Localization\ILangService
-     */
-    protected $lang;
+	/**
+	 * @var \Foundation\Localization\ILangService
+	 */
+	protected $lang;
+	protected $translatedRoutes = [];
 
-    public function __construct($defaultRoutes = null, ILangService $lang = null)
-    {
-        $this->lang = $lang;
-        parent::__construct($defaultRoutes);
-    }
+	public function __construct($defaultRoutes = null, ILangService $lang = null) {
+		$this->lang = $lang;
+		parent::__construct($defaultRoutes);
+	}
 
+	public function beforeDispatch(Event $event, Dispatcher $dispatcher) {
 
-    public function beforeDispatch(Event $event, Dispatcher $dispatcher) {
+	}
 
-    }
+	public function beforeDispatchLoop(Event $event, Dispatcher $dispatcher) {
+		$lang = $dispatcher->getParam(self::LANG_PARAM);
+		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
 
-    public function beforeDispatchLoop(Event $event, Dispatcher $dispatcher) {
-        $lang = $dispatcher->getParam(self::LANG_PARAM);
-        $route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
+		if ($route !== null) {
+			$paths = $route->getPaths();
+			$isLanguageRoute = array_key_exists(self::LANG_PARAM, $paths);
+		} else {
+			$isLanguageRoute = false;
+		}
 
-        if ($route !== null) {
-            $paths = $route->getPaths();
-            $isLanguageRoute = array_key_exists(self::LANG_PARAM, $paths);
-            $isAliasRoute = array_key_exists(self::ALIAS_PARAM, $paths);
-        } else {
-            $isLanguageRoute = false;
-        }
+		if ($isLanguageRoute
+			 && !$this->isVisitedByRobot()
+			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
+			$dispatcher->setParam('lang', 'cz');
+			$this->getDI()->getResponse()->redirect([
+				self::LANG_PARAM => 'cz',
+				'for' => 'index',
+			])->send();
+		}
+	}
 
-        if ($isLanguageRoute && $isAliasRoute)
-        {
-            $aliases = $this->lang->getAliases($lang);
-            $alias = $dispatcher->getParam(self::ALIAS_PARAM);
-            if ($alias && isset($aliases[$alias]))
-            {
-                $dispatcher->setControllerName($aliases[$alias]['controller']);
-                $dispatcher->setActionName($aliases[$alias]['action']);
-            }
-        }
-        else
-        if ($isLanguageRoute
-                && !$this->isVisitedByRobot()
-                && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
-            $dispatcher->setParam('lang', 'cz');
-            $this->getDI()->getResponse()->redirect([
-                self::LANG_PARAM => 'cz',
-                'for' => 'index',
-            ])->send();
-        }
-    }
+	public function isVisitedByRobot() {
+		$userAgent = $this->getDI()->getRequest()->getHeader('User-agent');
+		return preg_match("/(bot|facebook|googlebot|facebookexternalhit|twitterbot|crawler)/i", $userAgent);
+	}
 
-    public function isVisitedByRobot() {
-        $userAgent =  $this->getDI()->getRequest()->getHeader('User-agent');
-        return preg_match("/(bot|facebook|googlebot|facebookexternalhit|twitterbot|crawler)/i", $userAgent);
-    }
+	public function getRouteByName($name) {
+		if ($name === 'this') {
+			return $this->getMatchedRoute();
+		} else {
+			return parent::getRouteByName($name);
+		}
+	}
 
-    public function getRouteByName($name)
-    {
-        if ($name === 'this') {
-            return $this->getMatchedRoute();
-        } else {
-            return parent::getRouteByName($name);
-        }
-    }
+	public function mount($group) {
+		if (method_exists($group, 'getTranslatedRoutes')) {
+			$this->translatedRoutes = array_merge_recursive($this->translatedRoutes, $group->getTranslatedRoutes());
+		}
 
+		return parent::mount($group);
+	}
+
+	public function getTranslatedRoutes() {
+		return $this->translatedRoutes[$this->lang->getUserDefaultLanguage()];
+	}
 
 }

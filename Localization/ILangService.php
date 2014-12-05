@@ -9,15 +9,14 @@
 
 namespace Foundation\Localization;
 
-
 interface ILangService {
 
-    public function getUserDefaultLanguage();
+	public function getUserDefaultLanguage();
 
-    public function isMatchingUserDefaultLanguage($lang);
+	public function isMatchingUserDefaultLanguage($lang);
 
-    public function translate($variable, $lang = null);
+	public function translate($variable, $lang = null);
 
-    public function getAliases($lang);
+	public function getAvailableLangs();
 
 }
