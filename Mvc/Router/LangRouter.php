@@ -76,8 +76,12 @@ class LangRouter extends Router {
 		return parent::mount($group);
 	}
 
-	public function getTranslatedRoutes() {
-		return $this->translatedRoutes[$this->lang->getUserDefaultLanguage()];
+	public function getTranslatedRoutes($lang) {
+		if (isset($this->translatedRoutes[$lang])) {
+			return $this->translatedRoutes[$lang];
+		} else {
+			return null;
+		}
 	}
 
 }
