@@ -12,7 +12,7 @@ interface ILocatorService {
 
     public function getUserLanguage();
 
-    public function getUserCity();
+    public function getUserPlaceLocality();
 
     public function getUserCountry();
 

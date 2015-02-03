@@ -34,6 +34,7 @@ class LangRouter extends Router {
 	}
 
 	public function beforeDispatchLoop(Event $event, Dispatcher $dispatcher) {
+
 		$lang = $dispatcher->getParam(self::LANG_PARAM);
 		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
 
@@ -44,13 +45,18 @@ class LangRouter extends Router {
 			$isLanguageRoute = false;
 		}
 
+
+
 		if ($isLanguageRoute
 			 && !$this->isVisitedByRobot()
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
-			$dispatcher->setParam('lang', 'cz');
+
+			$langParam = $this->lang->getUserDefaultLanguage();
+
+			$dispatcher->setParam('lang', $langParam);
 			$this->getDI()->getResponse()->redirect([
-				self::LANG_PARAM => 'cz',
-				'for' => 'index',
+				self::LANG_PARAM => $langParam,
+				'for' => 'this',
 			])->send();
 		}
 	}

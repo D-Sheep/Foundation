@@ -19,17 +19,19 @@ class Url extends \Phalcon\Mvc\Url {
      */
     public function get($uri = null, $args = null, $local = null)
     {
-
         if (isset($uri['for'])) {
             $route = $this->getDI()->getRouter()->getRouteByName($uri['for']);
             $paths = $route->getPaths();
             $request = $this->getDI()->getRequest();
             $dispatcher = $this->getDI()->getDispatcher();
+
             foreach($paths as $pathKey => $value) {
-                if (is_integer($value) && !isset($uri[$pathKey])) {
-                    $uri[$pathKey] = $dispatcher->getParam($pathKey);
+                if (!array_key_exists($pathKey, $uri) && $pathKey !== 'for') {
+                    $uri[$pathKey] = $dispatcher->getParam($pathKey) ?: $value;
                 }
             }
+
+
             if ($args === null) {
                 $args = [];
             }
@@ -40,7 +42,9 @@ class Url extends \Phalcon\Mvc\Url {
                     }
                 }
             }
+
         }
+
         return parent::get($uri, $args);
     }
 }

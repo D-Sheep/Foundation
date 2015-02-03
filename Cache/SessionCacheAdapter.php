@@ -53,7 +53,6 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
             if ($value!=null) {
                 $this->cache->save($key,$value);
             }
-
         }
         $this->_data = null;
     }

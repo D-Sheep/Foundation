@@ -5,6 +5,7 @@ namespace Foundation\Router;
 use Phalcon\DiInterface;
 
 class LangGroup extends \Phalcon\Mvc\Router\Group {
+
 	protected $multilingualRoutes = [];
 	protected $translatedRoutes = [];
 
@@ -50,7 +51,7 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
 				}
 				$pattern = strtr($route['route']['pattern'], $translationsForRoute);
 
-				$this->add('/' . $lang . '/' . $pattern, $route['route']['paths']);
+				$this->add('/{lang:'.$lang.'}/' . $pattern, $route['route']['paths']);
 				$this->translatedRoutes = $translations;
 			}
 		}
