@@ -60,7 +60,8 @@ class Configurator {
         }
 
         if (!isset($this->environments[$baseUrl] )) {
-            throw new ConfigException("Cant detect Url");
+            $this->environments[$baseUrl] = self::DEVELOPMENT;
+            //throw new ConfigException("Cant detect Url");
         }
 
         $this->mode = $this->environments[$baseUrl];
