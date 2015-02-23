@@ -11,9 +11,13 @@ namespace Foundation\Storage;
 
 interface IStorageService {
 
-	public function createFile($fileName, $directory, $file);
+	public function createFile($fileName, $directory, $content);
+
+	public function moveFile($fileName, $directory, $file);
 
 	public function getFilePath($fileName, $directory);
+
+	public function fileExists($fileName, $directory);
 
 	public function addDirectory($name, $path);
 }

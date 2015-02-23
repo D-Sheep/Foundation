@@ -19,7 +19,11 @@ class LocalStorageService implements IStorageService {
 		$this->uploadDirectory = $uploadDirectory;
 	}
 
-	public function createFile($fileName, $directory, $file) {
+	public function createFile($fileName, $directory, $content) {
+		file_put_contents($this->publicPath.'/'.$this->uploadDirectory.'/'.$this->directories[$directory].'/'.$fileName, $content);
+	}
+
+	public function moveFile($fileName, $directory, $file) {
 		$file->moveTo($this->publicPath.'/'.$this->uploadDirectory.'/'.$this->directories[$directory].'/'.$fileName);
 	}
 
@@ -29,5 +33,9 @@ class LocalStorageService implements IStorageService {
 
 	public function addDirectory($name, $path) {
 		$this->directories[$name] = $path;
+	}
+
+	public function fileExists($fileName, $directory) {
+		return file_exists($this->publicPath.'/'.$this->uploadDirectory.'/'.$this->directories[$directory].'/'.$fileName);
 	}
 }

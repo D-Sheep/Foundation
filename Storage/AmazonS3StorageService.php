@@ -9,25 +9,51 @@
 
 namespace Foundation\Storage;
 
+use Aws\S3\S3Client;
+
 class AmazonS3StorageService implements IStorageService {
 	protected $directories = [];
-	protected $uploadDirectory;
-	protected $publicPath;
+	protected $client;
+	protected $bucket;
 
-	public function __construct($publicPath, $uploadDirectory) {
-		$this->publicPath = $publicPath;
-		$this->uploadDirectory = $uploadDirectory;
+	public function __construct($bucket) {
+		$this->client = S3Client::factory(array(
+		    'key'    => 'AKIAIVVFLAWMY6ABFGCA',
+	        'secret' => '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',
+			'signature' => 'v4',
+			'region'=>'eu-central-1'
+		));
+		$this->bucket = $bucket;
 	}
 
-	public function createFile($fileName, $directory, $file) {
-		$file->moveTo($this->publicPath.'/'.$this->uploadDirectory.'/'.$this->directories[$directory].'/'.$fileName);
+	public function createFile($fileName, $directory, $content) {
+		$result = $this->client->putObject(array(
+		    'Bucket'     => $this->bucket,
+		    'Key'        => $directory.'/'.$fileName,
+		    'Body' => $content,
+		    'ACL' => 'public-read'
+		));
+	}
+
+	public function moveFile($fileName, $directory, $file) {
+		$result = $this->client->putObject(array(
+		    'Bucket'     => $this->bucket,
+		    'Key'        => $directory.'/'.$fileName,
+		    'SourceFile' => $file->getPath().'/'.$file->getFilename(),
+		    'ACL' => 'public-read'
+		));
 	}
 
 	public function getFilePath($fileName, $directory) {
-		return $this->uploadDirectory.'/'.$this->directories[$directory].'/'.$fileName;
+		$url = $this->client->getObjectUrl($this->bucket,  $directory.'/'.$fileName);
+		return $url;
 	}
 
 	public function addDirectory($name, $path) {
 		$this->directories[$name] = $path;
+	}
+
+	public function fileExists($fileName, $directory) {
+		return $this->client->doesObjectExist($this->bucket, $directory.'/'.$fileName);
 	}
 }
