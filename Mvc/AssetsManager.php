@@ -11,6 +11,7 @@ namespace Foundation\Mvc;
 
 use Foundation\Cache\CacheFactory,
     Foundation\Config\Configurator,
+    Foundation\Logger,
     Phalcon\Assets\Manager,
     Phalcon\Assets\Collection,
     Foundation\Helper\Css\LessFilter,
