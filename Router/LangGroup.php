@@ -2,6 +2,7 @@
 
 namespace Foundation\Router;
 
+use Foundation\Logger;
 use Phalcon\DiInterface;
 
 class LangGroup extends \Phalcon\Mvc\Router\Group {
@@ -26,32 +27,32 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
 		$keys = [];
 		$routesWithKeys = [];
 
+		//find keys of routes
 		foreach ($this->multilingualRoutes as $route) {
 			$tempKeys = [];
 			preg_match_all('/<([a-z0-9-]*)>/', $route['pattern'], $tempKeys);
 			$keys = array_merge($keys, $tempKeys[1]);
 
-			$routesWithKeys[] = ['route' => $route, 'keys' => $tempKeys[1]];
+			$routesWithKeys[] = ['route' => $route, 'key' => $tempKeys[1]];
 		}
 
+		//translate keys for all routes
 		$translations = $langService->getTranslations($keys);
 
-		$currentLangTranslations = [];
-
 		foreach ($routesWithKeys as $route) {
+			$key = $route['key'][0];
 			foreach ($langService->getAvailableLangs() as $lang) {
+
+				//find translation of route for lang
 				$translationsForRoute = [];
-
-				foreach ($route['keys'] as $key) {
-					if (isset($translations[$lang][$key])) {
-						$translationsForRoute['<' . $key . '>'] = $translations[$lang][$key];
-					} else {
-						$translationsForRoute['<' . $key . '>'] = $key;
-					}
+				if (isset($translations[$lang][$key])) {
+					$translationsForRoute['<' . $key . '>'] = $translations[$lang][$key];
+				} else {
+					$translationsForRoute['<' . $key . '>'] = $key;
 				}
-				$pattern = strtr($route['route']['pattern'], $translationsForRoute);
 
-				$this->add('/{lang:'.$lang.'}/' . $pattern, $route['route']['paths']);
+				$pattern = strtr($route['route']['pattern'], $translationsForRoute);
+				$this->add('/{lang:'.$lang.'}/' . $pattern, $route['route']['paths'])->setName($key."|".$lang);;
 				$this->translatedRoutes = $translations;
 			}
 		}

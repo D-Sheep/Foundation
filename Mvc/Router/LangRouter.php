@@ -10,13 +10,16 @@
 namespace Foundation\Mvc\Router;
 
 use Foundation\Localization\ILangService;
+use Foundation\Logger;
 use Foundation\Mvc\Dispatcher;
 use Phalcon\Events\Event;
 use Phalcon\Mvc\Router;
+use Storyous\Core\Lang\LangService;
 
 class LangRouter extends Router {
 
 	const LANG_PARAM = 'lang';
+	const SET_LANG_IN_URL = "setLang";
 
 	/**
 	 * @var \Foundation\Localization\ILangService
@@ -29,14 +32,11 @@ class LangRouter extends Router {
 		parent::__construct($defaultRoutes);
 	}
 
-	public function beforeDispatch(Event $event, Dispatcher $dispatcher) {
-
-	}
-
-	public function beforeDispatchLoop(Event $event, Dispatcher $dispatcher) {
+	public function beforeExecuteRoute(Event $event, Dispatcher $dispatcher) {
 
 		$lang = $dispatcher->getParam(self::LANG_PARAM);
 		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
+		$urlService = $dispatcher->getDI()->getUrl();
 
 		if ($route !== null) {
 			$paths = $route->getPaths();
@@ -45,6 +45,33 @@ class LangRouter extends Router {
 			$isLanguageRoute = false;
 		}
 
+		//$dispatcher->getActiveController() má interface mam hromadu jazyku (baseconstoler - metalang)
+		// jinak použiju this
+
+		$request = $dispatcher->getDI()->getRequest();
+		$queryParams = $request->getQuery();
+		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
+			$newLang =$queryParams[self::SET_LANG_IN_URL];
+			$session = $dispatcher->getDI()->getSession();
+			$session->set(LangService::STORED_SESSION_LANG, $newLang);
+
+			$controller = $dispatcher->getActiveController();
+			if (method_exists($controller, "getAlternativeLinkForLang")){
+				$response = $this->getDI()->getResponse()->redirect($controller->getAlternativeLinkForLang($newLang));
+			} else {
+				$dispatcher->setParam('lang', $newLang);
+				$response = $this->getDI()->getResponse()->redirect([
+					self::LANG_PARAM => $newLang,
+					'for' => 'this',
+					'_query' => []
+				]);
+			}
+			$headers = $response->getHeaders();
+			$location = $headers->get("Location");
+			$location = substr($location, 0, (strlen(self::SET_LANG_IN_URL)+strlen($newLang)+2)*(-1));
+			$response->setHeader("Location", $location);
+			$response->send();
+		}
 
 
 		if ($isLanguageRoute
@@ -56,7 +83,7 @@ class LangRouter extends Router {
 			$dispatcher->setParam('lang', $langParam);
 			$this->getDI()->getResponse()->redirect([
 				self::LANG_PARAM => $langParam,
-				'for' => 'this',
+				'for' => 'this'
 			])->send();
 		}
 	}
@@ -66,12 +93,33 @@ class LangRouter extends Router {
 		return preg_match("/(bot|facebook|googlebot|facebookexternalhit|twitterbot|crawler)/i", $userAgent);
 	}
 
-	public function getRouteByName($name) {
+	/**
+	 * @param string $name
+	 * @param null $lang
+	 * @return Router\Route
+	 */
+	public function getRouteByName($name, $lang = null) {
+		if ($lang!==null){
+			// I need the name of route
+			if ($name === 'this') {
+				$name = $this->getMatchedRoute()->getName();
+			}
+			Logger::debug("pro", $name);
+			$matches = [];
+			preg_match("/(.+)\|[a-z]{2}/", $name, $matches);
+
+			//its langroute
+			if(isset($matches[1])){
+				return $this->getRouteByName($matches[1]."|".$lang);
+			}
+		}
+		 // is not a lang route
 		if ($name === 'this') {
 			return $this->getMatchedRoute();
 		} else {
 			return parent::getRouteByName($name);
 		}
+
 	}
 
 	public function mount($group) {

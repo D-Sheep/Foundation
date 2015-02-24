@@ -9,6 +9,7 @@
 
 namespace Foundation\Mvc;
 
+use Foundation\Mvc\Router\LangRouter;
 
 class Url extends \Phalcon\Mvc\Url {
 
@@ -20,27 +21,33 @@ class Url extends \Phalcon\Mvc\Url {
     public function get($uri = null, $args = null, $local = null)
     {
         if (isset($uri['for'])) {
-            $route = $this->getDI()->getRouter()->getRouteByName($uri['for']);
+            $lang = null;
+            if (isset($uri[LangRouter::LANG_PARAM])) $lang = $uri[LangRouter::LANG_PARAM];
+            $route = $this->getDI()->getRouter()->getRouteByName($uri['for'], $lang);
             $paths = $route->getPaths();
             $request = $this->getDI()->getRequest();
             $dispatcher = $this->getDI()->getDispatcher();
 
             foreach($paths as $pathKey => $value) {
-                if (!array_key_exists($pathKey, $uri) && $pathKey !== 'for') {
+                if (!array_key_exists($pathKey, $uri) && $pathKey !== 'for' && $pathKey) {
                     $uri[$pathKey] = $dispatcher->getParam($pathKey) ?: $value;
                 }
             }
 
-
             if ($args === null) {
                 $args = [];
             }
+
             if ($uri['for'] === 'this') {
                 foreach($request->get() as $param => $value) {
                     if (!array_key_exists($param, $args) && $param !== '_url') {
                         $args[$param] = $value;
                     }
                 }
+            }
+
+            if ($lang !== null){
+                $uri["for"] = $route->getName();
             }
 
         }
