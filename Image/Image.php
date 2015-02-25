@@ -232,5 +232,4 @@ class Image extends Imagick {
         $handle = fopen($url, 'rb');
         $this->getInternalImInstance()->readImageFile($handle);
     }
-
 }
