@@ -16,8 +16,12 @@ class AmazonS3StorageService implements IStorageService {
 	protected $client;
 	protected $bucket;
 
-	public function __construct($bucket) {
+	public function __construct($bucket, $key, $secret, $region) {
 		$this->client = S3Client::factory(array(
+		    'key'    => $key,
+	        'secret' => $secret,
+			'signature' => 'v4',
+			'region'=> $region
 		));
 		$this->bucket = $bucket;
 	}
