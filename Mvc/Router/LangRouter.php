@@ -52,6 +52,10 @@ class LangRouter extends Router {
 		$queryParams = $request->getQuery();
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
 			$newLang =$queryParams[self::SET_LANG_IN_URL];
+
+			//TODO je lang podporovaný? LangService->getAvailableLangs
+			//co když neni podporovanej?
+
 			$session = $dispatcher->getDI()->getSession();
 			$session->set(LangService::STORED_SESSION_LANG, $newLang);
 
@@ -79,7 +83,7 @@ class LangRouter extends Router {
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
 			$langParam = $this->lang->getUserDefaultLanguage();
-
+			
 			$dispatcher->setParam('lang', $langParam);
 			$this->getDI()->getResponse()->redirect([
 				self::LANG_PARAM => $langParam,
@@ -104,7 +108,6 @@ class LangRouter extends Router {
 			if ($name === 'this') {
 				$name = $this->getMatchedRoute()->getName();
 			}
-			Logger::debug("pro", $name);
 			$matches = [];
 			preg_match("/(.+)\|[a-z]{2}/", $name, $matches);
 
