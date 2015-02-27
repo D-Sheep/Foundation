@@ -36,7 +36,6 @@ class LangRouter extends Router {
 
 		$lang = $dispatcher->getParam(self::LANG_PARAM);
 		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
-		$urlService = $dispatcher->getDI()->getUrl();
 
 		if ($route !== null) {
 			$paths = $route->getPaths();
@@ -52,29 +51,7 @@ class LangRouter extends Router {
 		$queryParams = $request->getQuery();
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
 			$newLang =$queryParams[self::SET_LANG_IN_URL];
-
-			//TODO je lang podporovaný? LangService->getAvailableLangs
-			//co když neni podporovanej?
-
-			$session = $dispatcher->getDI()->getSession();
-			$session->set(LangService::STORED_SESSION_LANG, $newLang);
-
-			$controller = $dispatcher->getActiveController();
-			if (method_exists($controller, "getAlternativeLinkForLang")){
-				$response = $this->getDI()->getResponse()->redirect($controller->getAlternativeLinkForLang($newLang));
-			} else {
-				$dispatcher->setParam('lang', $newLang);
-				$response = $this->getDI()->getResponse()->redirect([
-					self::LANG_PARAM => $newLang,
-					'for' => 'this',
-					'_query' => []
-				]);
-			}
-			$headers = $response->getHeaders();
-			$location = $headers->get("Location");
-			$location = substr($location, 0, (strlen(self::SET_LANG_IN_URL)+strlen($newLang)+2)*(-1));
-			$response->setHeader("Location", $location);
-			$response->send();
+			$this->redirectToLang($dispatcher, $newLang, true);
 		}
 
 
@@ -83,13 +60,34 @@ class LangRouter extends Router {
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
 			$langParam = $this->lang->getUserDefaultLanguage();
-			
-			$dispatcher->setParam('lang', $langParam);
-			$this->getDI()->getResponse()->redirect([
-				self::LANG_PARAM => $langParam,
-				'for' => 'this'
-			])->send();
+
+			$this->redirectToLang($dispatcher, $langParam);
 		}
+	}
+
+	private function redirectToLang(Dispatcher $dispatcher, $newLang, $setLangInSession = false){
+		//TODO je lang podporovaný? LangService->getAvailableLangs
+		//co dělat když neni podporovanej?
+		$controller = $dispatcher->getActiveController();
+		if (method_exists($controller, "getAlternativeLinkForLang")){
+			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
+			$response = $this->getDI()->getResponse()->redirect($arrayForLink);
+		} else {
+			$dispatcher->setParam('lang', $newLang);
+			$response = $this->getDI()->getResponse()->redirect([
+				self::LANG_PARAM => $newLang,
+				'for' => 'this'
+			]);
+		}
+		if ($setLangInSession) {
+			$session = $dispatcher->getDI()->getSession();
+			$session->set(LangService::STORED_SESSION_LANG, $newLang);
+		}
+		/*$headers = $response->getHeaders();
+        $location = $headers->get("Location");
+        $location = substr($location, 0, (strlen(self::SET_LANG_IN_URL)+strlen($newLang)+2)*(-1));
+        $response->setHeader("Location", $location);*/
+		$response->send();
 	}
 
 	public function isVisitedByRobot() {

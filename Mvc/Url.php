@@ -40,7 +40,7 @@ class Url extends \Phalcon\Mvc\Url {
 
             if ($uri['for'] === 'this') {
                 foreach($request->get() as $param => $value) {
-                    if (!array_key_exists($param, $args) && $param !== '_url') {
+                    if (!array_key_exists($param, $args) && $param !== '_url' && $param !== 'setLang') {
                         $args[$param] = $value;
                     }
                 }
