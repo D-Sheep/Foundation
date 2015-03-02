@@ -96,11 +96,12 @@ class Configurator {
         $this->config = Builder::factory(Builder::ADAPTER_JSON, $configPath . '/base.config.json');
         foreach ($configTypes as $config_type){
             $configName = $configPath . "/" . $config_type . "." . $this->mode . '.config.json';
-            echo $configName. "<br>";
             if (file_exists($configName)){
                 $this->config->merge(Builder::factory(Builder::ADAPTER_JSON, $configName));
             }
         }
+        echo "db: ".$this->config->database->host."<br>";
+        echo "dbPro: ".$this->config->databasePro->host."<br>";
         exit();
     }
     /**
