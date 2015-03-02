@@ -100,9 +100,6 @@ class Configurator {
                 $this->config->merge(Builder::factory(Builder::ADAPTER_JSON, $configName));
             }
         }
-        echo "db: ".$this->config->database->host."<br>";
-        echo "dbPro: ".$this->config->databasePro->host."<br>";
-        exit();
     }
     /**
      * Detects debug mode by IP address.
