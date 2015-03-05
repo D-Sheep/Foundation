@@ -109,7 +109,7 @@ class LangRouter extends Router {
 			$matches = [];
 			preg_match("/(.+)\|[a-z]{2}/", $name, $matches);
 
-			//its langroute
+			//its lang route
 			if(isset($matches[1])){
 				return $this->getRouteByName($matches[1]."|".$lang);
 			}
