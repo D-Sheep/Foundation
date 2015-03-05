@@ -228,4 +228,8 @@ class Image extends Imagick {
         $response->send();
     }
 
+    public function loadImage($url) {
+        $handle = fopen($url, 'rb');
+        $this->getInternalImInstance()->readImageFile($handle);
+    }
 }
