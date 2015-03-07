@@ -60,7 +60,6 @@ class Image extends Imagick {
      * @return \Foundation\Utils\ImImage
      */
     public function resize($width = null, $height = null, $flags = self::FIT) {
-
         if ($flags & self::EXACT) {
             return $this->resize($width, $height, self::FILL)->cropImage('50%', '50%', $width, $height);
         }
