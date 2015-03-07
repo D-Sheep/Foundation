@@ -30,6 +30,9 @@ class Controller extends \Phalcon\Mvc\Controller {
         $this->view->lang = $lang;
         $this->view->basePath = $this->getDi()->getUrl()->getBasePath();
         $this->view->basePathWithLang = $this->getDi()->getUrl()->getBasePath().$lang."/";
+        $this->view->hostUrl = $this->getDi()->getSuperUrl()->getHostUrl();
+        $this->view->baseUrl = $this->getDi()->getSuperUrl()->getBaseUrl();
+        $this->view->baseUrlWithLang = $this->getDi()->getSuperUrl()->getBaseUrl().$lang."/";
     }
 
 
