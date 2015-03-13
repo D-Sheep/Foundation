@@ -67,6 +67,7 @@ class Configurator {
         $this->mode = $this->environments[$baseUrl];
         $this->debug = $this->detectDebugMode();
 
+        echo "mode: ".$this->mode."<br>";
         if ( strcmp($this->mode, Configurator::DEVELOPMENT==0)){
             if (!$this->debug) $this->debug = true;
             $this->development = true;
@@ -75,6 +76,10 @@ class Configurator {
             $this->development = false;
             $this->production = true;
         }
+
+        echo "je produkce: ";
+        var_dump($this->production);
+        exit();
 
         if ($this->development && !$this->testCache){
             $this->getConfig($this->configPath, $this->configTypes);
