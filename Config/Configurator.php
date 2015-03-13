@@ -68,7 +68,8 @@ class Configurator {
         $this->debug = $this->detectDebugMode();
 
         echo "mode: ".$this->mode."<br>";
-        if ( strcmp($this->mode, Configurator::DEVELOPMENT==0)){
+        echo "comapre with development ".strcmp($this->mode, Configurator::DEVELOPMENT)."<br>";
+        if ( strcmp($this->mode, Configurator::DEVELOPMENT)==0){
             if (!$this->debug) $this->debug = true;
             $this->development = true;
             $this->production = false;
