@@ -24,30 +24,34 @@ class Url extends \Phalcon\Mvc\Url {
             $lang = null;
             if (isset($uri[LangRouter::LANG_PARAM])) $lang = $uri[LangRouter::LANG_PARAM];
             $route = $this->getDI()->getRouter()->getRouteByName($uri['for'], $lang);
-            $paths = $route->getPaths();
-            $request = $this->getDI()->getRequest();
-            $dispatcher = $this->getDI()->getDispatcher();
+            if ($route === null){
+                return "notfound";
+            } else {
+                $paths = $route->getPaths();
+                $request = $this->getDI()->getRequest();
+                $dispatcher = $this->getDI()->getDispatcher();
 
-            foreach($paths as $pathKey => $value) {
-                if (!array_key_exists($pathKey, $uri) && $pathKey !== 'for' && $pathKey) {
-                    $uri[$pathKey] = $dispatcher->getParam($pathKey) ?: $value;
-                }
-            }
-
-            if ($args === null) {
-                $args = [];
-            }
-
-            if ($uri['for'] === 'this') {
-                foreach($request->get() as $param => $value) {
-                    if (!array_key_exists($param, $args) && $param !== '_url' && $param !== 'setLang') {
-                        $args[$param] = $value;
+                foreach ($paths as $pathKey => $value) {
+                    if (!array_key_exists($pathKey, $uri) && $pathKey !== 'for' && $pathKey) {
+                        $uri[$pathKey] = $dispatcher->getParam($pathKey) ?: $value;
                     }
                 }
-            }
 
-            if ($lang !== null){
-                $uri["for"] = $route->getName();
+                if ($args === null) {
+                    $args = [];
+                }
+
+                if ($uri['for'] === 'this') {
+                    foreach ($request->get() as $param => $value) {
+                        if (!array_key_exists($param, $args) && $param !== '_url' && $param !== 'setLang') {
+                            $args[$param] = $value;
+                        }
+                    }
+                }
+
+                if ($lang !== null) {
+                    $uri["for"] = $route->getName();
+                }
             }
 
         }
