@@ -255,13 +255,33 @@ class HttpRequestVerifier implements IOauthSignable {
                             continue;
                         }
 
-                        if (array_key_exists($name, $return)) {
-                            if (is_array($return[$name]))
-                                $return[$name][] = $value;
-                            else
-                                $return[$name] = array($return[$name], $value);
+                        preg_match("/([a-zA-Z0-9_]+)(%5B[a-zA-Z0-9_%]+%5D)/", $name, $nameArray);
+                        if (isset($nameArray[1])) {
+                            $name = $nameArray[1];
+
+                            preg_match_all("/%5B([a-zA-Z0-9_]+)%5D/", $nameArray[2], $keyArray);
+                            if (!array_key_exists($name, $return)) {
+                                $return[$name] = [];
+                            }
+
+                            $tempVal = &$return[$name];
+                            foreach ($keyArray[1] as $key) {
+                                if (!isset($tempVal[$key])) {
+                                    $tempVal[$key] = [];
+                                }
+                                $tempVal = &$tempVal[$key];
+                            }
+                            $tempVal = $value;
+
                         } else {
-                            $return[$name]  = $value;
+                            if (array_key_exists($name, $return)) {
+                                if (is_array($return[$name]))
+                                    $return[$name][] = $value;
+                                else
+                                    $return[$name] = array($return[$name], $value);
+                            } else {
+                                $return[$name]  = $value;
+                            }
                         }
                     }
                 }
