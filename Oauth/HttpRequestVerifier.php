@@ -316,6 +316,20 @@ class HttpRequestVerifier implements IOauthSignable {
         return $this->encodedParams;
     }
 
+    public function getDecodedParams() {
+        $params = $this->encodedParams;
+        if ($params === null) {
+            $params = $this->getAllParams();
+        }
+
+        array_walk_recursive($params, array($this, 'decodeValue'));
+        return $params;
+    }
+
+    public function decodeValue(&$value) {
+        $value = $this->oauthurldecode($value);
+    }
+
     /**
      * @param $header
      * @return string
