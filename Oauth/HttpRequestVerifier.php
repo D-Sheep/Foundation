@@ -233,11 +233,11 @@ class HttpRequestVerifier implements IOauthSignable {
             }
             // If this is a post then also check the posted variables
             if ((strcasecmp($this->request->getMethod(), 'POST') == 0 || strcasecmp($this->request->getMethod(), 'PUT') == 0) && (!isset($return['xoauth_body_signature']) || !$return['xoauth_body_signature'])) {
-
                 if ($this->getContentType() == 'multipart/form-data'|| strcasecmp($this->request->getMethod(), 'PUT') == 0) {
                     // Get the posted body (when available)
                     // pro ziskani parametru použij request->getPut()
                     $parameters .= $this->getRequestBodyOfMultipart();
+                    //$parameters .= str_replace(["+", "*", "%7E"], ["%20", "%2A", "~"], $this->getRequestBody());
 
                 } else if ($this->getContentType() == 'application/x-www-form-urlencoded') {
                     // Get the posted body (when available)
@@ -336,6 +336,34 @@ class HttpRequestVerifier implements IOauthSignable {
      */
     public function getHeader($header){
         return $this->request->getHeader($header);
+    }
+
+    /**
+     * Get the body of a POST with multipart/form-data by Edison tsai on 16:52 2010/09/16
+     *
+     * Used for fetching the post parameters and to calculate the body signature.
+     *
+     * @return string               null when no body present (or wrong content type for body)
+     */
+    public function getRequestBodyOfMultipart()
+    {
+        $body = null;
+        $requestMethod = $this->request->getMethod();
+        if ($requestMethod == 'POST' || $requestMethod == 'PUT')
+        {
+            $body = '';
+            $requestData = $requestMethod == 'PUT' ? $this->request->getPut() : $this->request->getPost();
+            foreach ($requestData AS $k => $v) {
+
+                $body .= $this->encodeUrlParam($k, $v);
+            } #end foreach
+            if(substr($body,-1) == '&')
+            {
+                $body = substr($body, 0, strlen($body)-1);
+            } #end if
+        } #end if
+
+        return $body;
     }
 
 
@@ -500,6 +528,4 @@ class HttpRequestVerifier implements IOauthSignable {
         }
         return $this->_rawBody;
     }
-
-
 }
