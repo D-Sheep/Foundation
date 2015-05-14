@@ -11,8 +11,9 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
 	protected $translatedRoutes = [];
 
 	public function __construct($paths = null, DiInterface $di = null) {
+        $module = (isset($paths['module']) ? $paths['module'] : 'Default');
 		parent::__construct([
-			'module' => 'Default',
+			'module' => $module,
 			$di,
 		]);
 	}
