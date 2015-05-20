@@ -9,6 +9,7 @@
 
 namespace Foundation\Mvc;
 
+use Foundation\Mvc\Router\LangRouter;
 
 /**
  * Class Controller
@@ -19,6 +20,8 @@ namespace Foundation\Mvc;
  *
  */
 class Controller extends \Phalcon\Mvc\Controller {
+
+    const DESCRIPTION_LENGTH = 160;
 
     protected function initialize() {
 
@@ -33,9 +36,68 @@ class Controller extends \Phalcon\Mvc\Controller {
         $this->view->hostUrl = $this->getDi()->getSuperUrl()->getHostUrl();
         $this->view->baseUrl = $this->getDi()->getSuperUrl()->getBaseUrl();
         $this->view->baseUrlWithLang = $this->getDi()->getSuperUrl()->getBaseUrl().$lang."/";
+
+        $stubs = (array) $this->getDi()->getConfigurator()->getConfiguration()->application->forbiddenUrlStubs;
+        $stubs = \Nette\Utils\Json::encode($stubs);
+        $this->view->_forbiddenUrlStubs = $stubs;
+
+        //links are arrays. urls are created from them in volt template.
+        //It's because these arrays can by used for redirecting in phalcon.
+        $this->view->_langAlternatives = $this->getAlternativeLinksForMeta();
     }
 
+    /**
+     * @param $ogTitle
+     * @param $ogDescription
+     * @param null $ogImage
+     * @param null $ogType
+     * @param array $ogArray
+     */
+    public function setFacebookOg($ogTitle, $ogDescription, $ogImage = null, $ogType = null, array $ogArray = null) {
+        $this->view->_ogTitle = $ogTitle;
+        if ($ogDescription) {
+            if (strlen($ogDescription) > self::DESCRIPTION_LENGTH) $ogDescription = substr($ogDescription, 0, self::DESCRIPTION_LENGTH - 3) . "...";
+            $this->view->_ogDescription = $ogDescription;
+            $this->view->_twDesc = $ogDescription;
+        }
+        if ($ogImage) $this->view->_ogImage = $ogImage;
+        if ($ogType) $this->view->_ogType = $ogType;
+        $this->view->_ogArray = $ogArray ? $ogArray : array();
+    }
 
+    /*
+     * string $description
+     */
+    public function setDescription($descriptoon){
+        $this->view->_description = $descriptoon;
+    }
+
+    protected function getAlternativeLinksForMeta(){
+        $route = $this->router->getMatchedRoute();
+        if(isset($route) && $this->_langAlternatives === null) {
+            $_langAlternatives = [];
+            $langService = $this->getDi()->getLang();
+            foreach ($langService->getAvailableLangs() as $lang) {
+                $url = [
+                    LangRouter::LANG_PARAM => $lang,
+                    'for' => 'this'
+                ];
+                $_langAlternatives[$lang] = $url;
+            }
+            $this->_langAlternatives = $_langAlternatives;
+        }
+        return $this->_langAlternatives;
+    }
+
+    /**
+     * Gets alternative array for creating url by urlservice for specificated language
+     * @param $lang
+     * @return array|null
+     */
+    public function getAlternativeLinkForLang($lang){
+        $langAlternatives = $this->getAlternativeLinksForMeta();
+        return isset($langAlternatives[$lang]) ? $langAlternatives[$lang] : null;
+    }
 
 
 }
