@@ -80,7 +80,8 @@ class Controller extends \Phalcon\Mvc\Controller {
             foreach ($langService->getAvailableLangs() as $lang) {
                 $url = [
                     LangRouter::LANG_PARAM => $lang,
-                    'for' => 'this'
+                    'for' => 'this',
+                    'type' => 'no_query'
                 ];
                 $_langAlternatives[$lang] = $url;
             }
