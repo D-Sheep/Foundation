@@ -23,6 +23,8 @@ class Controller extends \Phalcon\Mvc\Controller {
 
     const DESCRIPTION_LENGTH = 160;
 
+    protected $_langAlternatives = null;
+
     protected function initialize() {
 
         $this->getDi()->getEventsManager()->attach('view:beforeRender', $this);
@@ -32,6 +34,9 @@ class Controller extends \Phalcon\Mvc\Controller {
         $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
         $this->view->lang = $lang;
         $this->view->basePath = $this->getDi()->getUrl()->getBasePath();
+        if ($this->view->basePath === "/") {
+            $this->view->basePath = "";
+        }
         $this->view->basePathWithLang = $this->getDi()->getUrl()->getBasePath().$lang."/";
         $this->view->hostUrl = $this->getDi()->getSuperUrl()->getHostUrl();
         $this->view->baseUrl = $this->getDi()->getSuperUrl()->getBaseUrl();
