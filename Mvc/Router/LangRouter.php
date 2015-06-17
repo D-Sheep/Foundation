@@ -32,6 +32,22 @@ class LangRouter extends Router {
 		parent::__construct($defaultRoutes);
 	}
 
+    public function beforeDispatchLoop(Event $event, Dispatcher $dispatcher) {
+        $url = $dispatcher->getDI()->getSuperUrl()->getPathInfo();//$dispatcher->getDI()->getSuperUrl()->getPath();
+        preg_match("/(?'url'.*)\/$/", $url, $output_array);
+
+        // if url ends with / redirect
+        if (sizeof($output_array) > 0 && isset($output_array["url"])) {
+            $newUrl = ($output_array["url"] == '' ? '/' : $output_array["url"]);
+            $query = $dispatcher->getDI()->getSuperUrl()->getQuery();
+            if ($query !== null && $query !== ''){
+                $newUrl = $newUrl . "?". $query;
+            }
+            $dispatcher->getDI()->getResponse()->redirect($newUrl, null, 301);
+        }
+
+    }
+
 	public function beforeExecuteRoute(Event $event, Dispatcher $dispatcher) {
 
 		$lang = $dispatcher->getParam(self::LANG_PARAM);

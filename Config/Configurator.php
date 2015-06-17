@@ -9,7 +9,8 @@ use Phalcon\Config;
 class Configurator {
 
     const DEVELOPMENT = 'development',
-          PRODUCTION = 'production';
+          PRODUCTION = 'production',
+          BETA = 'beta';
 
     /* @var String */
     private $mode;
@@ -25,6 +26,9 @@ class Configurator {
 
     /* @var boolean */
     private $development;
+
+    /* @var boolean */
+    private $beta;
 
     /* @var boolean */
     private $testCache;
@@ -67,13 +71,19 @@ class Configurator {
         $this->mode = $this->environments[$baseUrl];
         $this->debug = $this->detectDebugMode();
 
-        if ( strcmp($this->mode, Configurator::DEVELOPMENT)==0){
+        if ( strcmp($this->mode, Configurator::DEVELOPMENT) == 0){
             if (!$this->debug) $this->debug = true;
             $this->development = true;
             $this->production = false;
-        } else if ( strcmp($this->mode, Configurator::PRODUCTION)==0 ){
+            $this->beta = false;
+        } else if ( strcmp($this->mode, Configurator::PRODUCTION) == 0 ){
             $this->development = false;
             $this->production = true;
+            $this->beta = false;
+        } else if ( strcmp($this->mode, Configurator::BETA) == 0) {
+            $this->development = false;
+            $this->production = false;
+            $this->beta = true;
         }
 
         if ($this->development && !$this->testCache){
@@ -124,6 +134,10 @@ class Configurator {
 
     public function isDevelopment(){
         return $this->development;
+    }
+
+    public function isBeta(){
+        return $this->beta;
     }
 
     public function getConfiguration(){

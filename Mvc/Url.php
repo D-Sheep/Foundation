@@ -37,17 +37,22 @@ class Url extends \Phalcon\Mvc\Url {
                     }
                 }
 
-                if ($args === null) {
-                    $args = [];
-                }
+                // if query args should be included
+                if (!isset($uri['type']) || $uri['type'] !== 'no_query'){
+                    if ($args === null) {
+                        $args = [];
+                    }
 
-                if ($uri['for'] === 'this') {
-                    foreach ($request->get() as $param => $value) {
-                        if (!array_key_exists($param, $args) && $param !== '_url' && $param !== 'setLang') {
-                            $args[$param] = $value;
+                    if ($uri['for'] === 'this') {
+                        foreach ($request->get() as $param => $value) {
+                            if (!array_key_exists($param, $args) && $param !== '_url' && $param !== 'setLang') {
+                                $args[$param] = $value;
+                            }
                         }
                     }
                 }
+
+
 
                 if ($lang !== null) {
                     $uri["for"] = $route->getName();
