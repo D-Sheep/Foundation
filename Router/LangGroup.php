@@ -40,18 +40,24 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
 		$translations = $langService->getTranslations($keys);
 
 		foreach ($routesWithKeys as $route) {
-			$key = $route['key'][0];
+            $keys = $route['key'];
 			foreach ($langService->getAvailableLangs() as $lang) {
 
-				//find translation of route for lang
+                //find translation of pattern parts for lang
 				$translationsForRoute = [];
-				if (isset($translations[$lang][$key])) {
-					$translationsForRoute['<' . $key . '>'] = $translations[$lang][$key];
-				} else {
-					$translationsForRoute['<' . $key . '>'] = $key;
-				}
+                $key="";
+                foreach($keys as $key){
+                    if (isset($translations[$lang][$key])) {
+                        $translationsForRoute['<' . $key . '>'] = $translations[$lang][$key];
+                    } else {
+                        $translationsForRoute['<' . $key . '>'] = $key;
+                    }
+                }
 
-				$pattern = strtr($route['route']['pattern'], $translationsForRoute);
+                //translate parts of pattern
+                $pattern = strtr($route['route']['pattern'], $translationsForRoute);
+
+                //add route
 				$this->add('/{lang:'.$lang.'}/' . $pattern, $route['route']['paths'])->setName($key."|".$lang);;
 				$this->translatedRoutes = $translations;
 			}
