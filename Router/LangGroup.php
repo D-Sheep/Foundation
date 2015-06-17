@@ -18,8 +18,8 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
 		]);
 	}
 
-	public function addMultilingualRoute($pattern, $paths) {
-		$this->multilingualRoutes[] = ['pattern' => $pattern, 'paths' => $paths];
+	public function addMultilingualRoute($pattern, $paths, $name = null) {
+		$this->multilingualRoutes[] = ['pattern' => $pattern, 'paths' => $paths, 'name' => $name];
 	}
 
 	protected function generateMultilingualRoutes(DiInterface $di = null) {
@@ -53,6 +53,9 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
                     } else {
                         $translationsForRoute['<' . $key . '>'] = $key;
                     }
+                }
+                if (isset($route['route']['name']) && $route['route']['name'] !== null) {
+                    $key = $route['route']['name'];
                 }
 
                 //translate parts of pattern
