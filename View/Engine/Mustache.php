@@ -195,15 +195,15 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         $lang = $this->getDi()->getLang()->getUserDefaultLanguage();
         $folder = $match_all[1];
         $filename = $match_all[2].($stache ? ".stache" : ".mustache");
-        $isProduction = $this->getDi()->getConfigurator()->isProduction();
+        $isDebug = $this->getDi()->getConfigurator()->isDebug();
         $cachingFolder = "";
-        if(!$isProduction){
+        if($isDebug){
             $cachingFolder = "cached_templates/";
         }
         $cachedPath = $basePath."/".$lang."/".$cachingFolder.$folder."/".$filename;
 
         try {
-            if (($isProduction && file_exists($cachedPath)) || ((!$isProduction) && file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path))){
+            if ((!$isDebug && file_exists($cachedPath)) || (($isDebug) && file_exists($cachedPath) && filemtime($cachedPath)>filemtime($path))){
                 return file_get_contents($cachedPath);
             } else {
                 $content = file_get_contents($path);
