@@ -28,9 +28,8 @@ class LessFilter implements FilterInterface {
      * @return $content
      */
     public function filter($content){
-        $les = new LessCss();
-        $les->addImportDir($this->path . '/bootstrap');
-        $les->addImportDir($this->path . '/core'); //Do not remove
-        return $les->compile($content);
+        $less = new LessCss();
+        $less->addImportDir($this->path);
+        return $less->compile($content);
     }
 }

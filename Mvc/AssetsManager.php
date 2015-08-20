@@ -164,60 +164,50 @@ class AssetsManager {
 
         //css
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
-
-        //set up to date
-        if (file_exists(WWW_DIR . "/" . $this->destinationFolder . "/general.css")){
-            $upToDate = $this->generateContent($collection, $this->css->getFolders(),
-                "css/", true, true, WWW_DIR . "/" . $this->destinationFolder . "/general.css");
-        } else {
-            $upToDate = false;
-        }
-
-        if ($upToDate) {
-            $collection->addCss( $this->destinationFolder . "/general.css");
-        } else {
-            $collection->addFilter(new LessFilter("css"))
+        if (file_exists(WWW_DIR . "/" . $this->destinationFolder . "/general.css")) { //The final stylesheet is already present
+            if ($this->isCssFresh($this->css->getFolders(), 'css/', WWW_DIR . "/" . $this->destinationFolder . "/general.css")) {
+                $collection->addCss( $this->destinationFolder . "/general.css"); //The style is fresh, use it
+            }
+        } else { //The stylesheet is missing, we have to generate it
+            $this->generateContent($collection, $this->css->getFolders(), "css/", true, false,
+                WWW_DIR . "/" . $this->destinationFolder . "/general.css");
+            $collection->addCss('css/general.less')
+                ->addFilter(new LessFilter("css"))
                 ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
                 ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash())
                 ->join(true);
-            $this->generateContent($collection, $this->css->getFolders(),
-                "css/", true);
         }
 
         //js
         $collection = $assets->collection(self::ASSETS_COLLECTION_FOOTER);
-        $collection = $this->generateContent($collection, $this->js->getFolders(),
-            "js/", false);
+        $this->generateContent($collection, $this->js->getFolders(), "js/", false);
         $this->applyFilters($collection, $this->js->getFilters());
     }
 
-    /*
-     * Generetes addCss/addJs of files to colection over $folders
-     * @var Collection $collection Collection from assets
-     * @var array $folders Strings of folder names
-     * @var path $path Path to root folder of folders
-     * @var boolean $css Indicates if css or js
+    /**
+     * Returns a recursive listing of all files in $folders
      */
-    private function generateContent( $collection, $folders, $path, $css, $upToDate = false, $generalPath = null){
-        /* @var Collection $collection */
-        foreach ($folders as $folder){
-            $folderPath = $path . $folder;
+    private function getAllSubfiles($folders, $basePath = '') {
+
+        $results = [];
+
+        foreach ($folders as $folder) {
+            $folderPath = $basePath . $folder;
             $subfolders[] = $folderPath;
             $array = [];
-            while (sizeof($subfolders)>0){
+            while (sizeof($subfolders) > 0) {
                 $folderPath = array_pop($subfolders);
-                if (is_file($folderPath)){
+                if (is_file($folderPath)) {
                     $array[] = $folderPath;
                 } else if ($handle = opendir($folderPath)) {
                     while (false !== ($file = readdir($handle))) {
                         if ($file == '.' || $file == '..') {
                             continue;
                         }
-                        $file  = $folderPath  . "/" . $file;
-                        if (is_file($file)){
-                            $array[] = $file;
+                        if (is_file($folderPath . '/' . $file)) {
+                            $array[] = $folderPath . '/' . $file;
                         } else {
-                            array_push($subfolders, $file);
+                            array_push($subfolders, $folderPath . "/" . $file);
                         }
                     }
                     closedir($handle);
@@ -231,33 +221,59 @@ class AssetsManager {
                 preg_match_all('/\//', $right, $n);
                 $slashCountLeft = count($m[0]);
                 $slashCountRight = count($n[0]);
-
                 if ($slashCountLeft == $slashCountRight) {
-                    $array = [$left, $right];
-                    sort($array);
-                    return $array[0] == $left ? - 1 : 1;
+                    return strcmp($left, $right);
                 } else {
                     return $slashCountLeft - $slashCountRight;
                 }
             });
+            $results = array_merge($results, $array);
+        }
+        return $results;
+    }
 
-            foreach($array as $item) {
-                if ($css && preg_match('/\.(css|less)$/', $item)) { //css
-                    if ($upToDate){
-                        if (filemtime($item)>filemtime($generalPath)) {
-                            return false;
-                        }
-                    } else {
-                        $collection->addCss($item);
-                    }
-                } else if (!$css && preg_match('/\.js$/', $item)) { //js
+    /**
+     * Checks if all styles are up-to-date
+     * @param $folders
+     * @param $path
+     * @param $reference
+     * @return bool
+     */
+    private function isCssFresh($folders, $path, $reference) {
+        $files = $this->getAllSubfiles($folders, $path);
+        foreach($files as $item) {
+            if (preg_match('/\.(css|less)$/', $item) && filemtime($item) > filemtime($reference)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Generates addCss/addJs of files to colection over $folders
+     * @var Collection $collection Collection from assets
+     * @var array $folders Strings of folder names
+     * @var string $path Path to root folder of folders
+     * @var boolean $css Indicates if css or js
+     */
+    private function generateContent( $collection, $folders, $path, $css, $checkUpToDate = false, $generalPath = null){
+
+        $files = $this->getAllSubfiles($folders, $path);
+        if ($css) {
+            $bootstrapFile = fopen('css/general.less', 'w'); //Generate bootstrap file
+            fwrite($bootstrapFile, "//Do not edit - this file is generated automaticly\n\n");
+            foreach ($files as $item) {
+                if (preg_match('/\.(css|less)$/', $item)) { //Only take .css or .less files
+                    fwrite($bootstrapFile, "@import '" . preg_replace('/^css\//', '', $item) . "';\n");
+                }
+            }
+            fclose($bootstrapFile);
+        } else {
+            foreach($files as $item) {
+                if (preg_match('/\.js$/', $item)) { //Only take .js files
                     $collection->addJs($item);
                 }
             }
-
-        }
-        if ($upToDate){
-            return true;
         }
         return $collection;
     }
