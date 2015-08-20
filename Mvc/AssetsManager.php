@@ -150,11 +150,9 @@ class AssetsManager {
             ->setTargetUri( $this->destinationFolder . "/" . $name . $this->getTimeHash())
             ->join(true);
         if($suffix== "css"){
-            $this->generateContent($collection, $this->css->getFolders(),
-                $suffix . "/", true);
+            $this->generateContent($collection, $this->css->getFolders(), $suffix . "/", true);
         } else {
-            $this->generateContent($collection, $this->js->getFolders(),
-                $suffix . "/", false);
+            $this->generateContent($collection, $this->js->getFolders(), $suffix . "/", false);
         }
         $cache->save($cacheName, $name);
     }
@@ -164,18 +162,20 @@ class AssetsManager {
 
         //css
         $collection = $assets->collection(self::ASSETS_COLLECTION_HEADER);
-        if (file_exists(WWW_DIR . "/" . $this->destinationFolder . "/general.css")) { //The final stylesheet is already present
-            if ($this->isCssFresh($this->css->getFolders(), 'css/', WWW_DIR . "/" . $this->destinationFolder . "/general.css")) {
-                $collection->addCss( $this->destinationFolder . "/general.css"); //The style is fresh, use it
-            }
-        } else { //The stylesheet is missing, we have to generate it
-            $this->generateContent($collection, $this->css->getFolders(), "css/", true, false,
-                WWW_DIR . "/" . $this->destinationFolder . "/general.css");
-            $collection->addCss('css/general.less')
-                ->addFilter(new LessFilter("css"))
-                ->setTargetPath(WWW_DIR . "/" . $this->destinationFolder . "/general.css")
-                ->setTargetUri( $this->destinationFolder . "/general.css" . $this->getTimeHash())
+        $finalStyle = $this->destinationFolder . "/general.css";
+
+        if ($this->isCssFresh($this->css->getFolders(), 'css/', WWW_DIR . "/" . $finalStyle)) { //The final stylesheet is already present and up-to-date
+
+            $collection->addCss($finalStyle);
+
+        } else { //The stylesheet is obsolete or missing, we have to (re)generate it
+
+            $this->generateContent($collection, $this->css->getFolders(), "css/", true);
+            $collection->addFilter(new LessFilter("css"))
+                ->setTargetPath(WWW_DIR . "/" . $finalStyle)
+                ->setTargetUri( $finalStyle . $this->getTimeHash())
                 ->join(true);
+
         }
 
         //js
@@ -240,6 +240,8 @@ class AssetsManager {
      * @return bool
      */
     private function isCssFresh($folders, $path, $reference) {
+        if (!file_exists($reference))
+            return false;
         $files = $this->getAllSubfiles($folders, $path);
         foreach($files as $item) {
             if (preg_match('/\.(css|less)$/', $item) && filemtime($item) > filemtime($reference)) {
@@ -256,18 +258,20 @@ class AssetsManager {
      * @var string $path Path to root folder of folders
      * @var boolean $css Indicates if css or js
      */
-    private function generateContent( $collection, $folders, $path, $css, $checkUpToDate = false, $generalPath = null){
+    private function generateContent( $collection, $folders, $path, $css){
 
         $files = $this->getAllSubfiles($folders, $path);
         if ($css) {
             $bootstrapFile = fopen('css/general.less', 'w'); //Generate bootstrap file
             fwrite($bootstrapFile, "//Do not edit - this file is generated automaticly\n\n");
+            fwrite($bootstrapFile, "//Generated on " . date('c') . "\n\n");
             foreach ($files as $item) {
                 if (preg_match('/\.(css|less)$/', $item)) { //Only take .css or .less files
                     fwrite($bootstrapFile, "@import '" . preg_replace('/^css\//', '', $item) . "';\n");
                 }
             }
             fclose($bootstrapFile);
+            $collection->addCss('css/general.less');
         } else {
             foreach($files as $item) {
                 if (preg_match('/\.js$/', $item)) { //Only take .js files
