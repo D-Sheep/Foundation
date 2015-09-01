@@ -262,16 +262,18 @@ class AssetsManager {
 
         $files = $this->getAllSubfiles($folders, $path);
         if ($css) {
-            $bootstrapFile = fopen('css/general.less', 'w'); //Generate bootstrap file
-            fwrite($bootstrapFile, "//Do not edit - this file is generated automaticly\n\n");
+            $bootstrapFilename = 'css/general.less';
+            $bootstrapFile = fopen($bootstrapFilename, 'w'); //Generate bootstrap file
             fwrite($bootstrapFile, "//Generated on " . date('c') . "\n\n");
             foreach ($files as $item) {
-                if (preg_match('/\.(css|less)$/', $item)) { //Only take .css or .less files
+                if (preg_match('/\.css$/', $item)) { //Include .css files immediately
+                    $collection->addCss($item);
+                } else if (preg_match('/\.less$/', $item)) { //Precompile .less files
                     fwrite($bootstrapFile, "@import '" . preg_replace('/^css\//', '', $item) . "';\n");
                 }
             }
             fclose($bootstrapFile);
-            $collection->addCss('css/general.less');
+            $collection->addCss($bootstrapFilename);
         } else {
             foreach($files as $item) {
                 if (preg_match('/\.js$/', $item)) { //Only take .js files
