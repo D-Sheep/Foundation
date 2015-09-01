@@ -43,7 +43,8 @@ class Request extends \Foundation\HttpClient\GeneralMessage  {
         $ch = curl_init();
 
         //set the url, number of POST vars, POST data
-        curl_setopt($ch,CURLOPT_URL, $this->url->getAbsoluteUrl());
+        $query = $this->method == "GET" ? '?' . $this->getRawData() : '';
+        curl_setopt($ch, CURLOPT_URL, $this->url->getAbsoluteUrl() . $query);
 
         curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
         if ($this->method == "POST") {
