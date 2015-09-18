@@ -259,22 +259,10 @@ class AssetsManager {
      * @var boolean $css Indicates if css or js
      */
     private function generateContent( $collection, $folders, $path, $css){
-
-        $files = $this->getAllSubfiles($folders, $path);
         if ($css) {
-            $bootstrapFilename = 'css/general.less';
-            $bootstrapFile = fopen($bootstrapFilename, 'w'); //Generate bootstrap file
-            fwrite($bootstrapFile, "//Generated on " . date('c') . "\n\n");
-            foreach ($files as $item) {
-                if (preg_match('/\.css$/', $item)) { //Include .css files immediately
-                    $collection->addCss($item);
-                } else if (preg_match('/\.less$/', $item)) { //Precompile .less files
-                    fwrite($bootstrapFile, "@import '" . preg_replace('/^css\//', '', $item) . "';\n");
-                }
-            }
-            fclose($bootstrapFile);
-            $collection->addCss($bootstrapFilename);
+            $collection->addCss('css/general.less');
         } else {
+            $files = $this->getAllSubfiles($folders, $path);
             foreach($files as $item) {
                 if (preg_match('/\.js$/', $item)) { //Only take .js files
                     $collection->addJs($item);
