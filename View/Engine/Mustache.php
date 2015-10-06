@@ -255,10 +255,11 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
         return preg_replace_callback("|{{\s?#each ([^}]+)}}(.+)({{\s?/each\s?}})|i", [$this, "callback"], $str);
     }
 
-
-
-    public function getPartial($path, $stache = false) {
-        return $this->mustache->getPartialsLoader()->load($path, $stache);
+    public function getPartial($path, $stache = false, $module = '') {
+        if ($module == '') {
+            $module = 'DefaultModule';
+        }
+        return $this->mustache->getPartialsLoader()->load($module . '/views/' . $path, $stache);
     }
 
     /**
