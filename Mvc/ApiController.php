@@ -136,11 +136,19 @@ class ApiController extends Controller {
         }
     }
 
-    public function sendResponseOk() {
+    /**
+     * @param bool $cache should browser cache response?
+     */
+    public function sendResponseOk($cache = true) {
         $this->payload->ok = 1;
-        $this->response
-            ->setContentType('application/json')
-            ->setJsonContent($this->payload)->send();
+        $response = $this->response;
+        $response->setContentType('application/json');
+        if(!$cache){
+            $response->setHeader("Cache-Control", "no-cache, no-store, must-revalidate"); // HTTP 1.1.
+            $response->setHeader("Pragma", "no-cache"); // HTTP 1.0.
+            $response->setHeader("Expires", "0"); // Proxies.
+        }
+        $this->response->setJsonContent($this->payload)->send();
     }
 
     public function sendResponseError($code, $message = null) {
