@@ -71,6 +71,14 @@ class Mustache extends Engine implements EngineInterface, InjectionAwareInterfac
             return strtoupper((string) $value);
         });
 
+        $this->mustache->addHelper('number', function($value) {
+            return number_format((int)$value, 0, ',', ' ');
+        });
+
+        $this->mustache->addHelper('thousands', function($value) {
+            return floor((int)$value / 1000);
+        });
+
         parent::__construct($view, $dependencyInjector);
     }
 
