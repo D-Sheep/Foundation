@@ -53,6 +53,7 @@ class LangRouter extends Router {
 		$lang = $dispatcher->getParam(self::LANG_PARAM);
 		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
 
+        Logger::debug("router", "-------------------------");
         //is lang param in route?
         if ($route !== null) {
             $paths = $route->getPaths();
@@ -61,18 +62,24 @@ class LangRouter extends Router {
             $isLanguageRoute = false;
         }
 
+        Logger::debug("router", $isLanguageRoute);
+
 		$request = $dispatcher->getDI()->getRequest();
 		$queryParams = $request->getQuery();
         //set new lang
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
 
+            Logger::debug("router", "set new lang ");
             $newLang =$queryParams[self::SET_LANG_IN_URL];
+            Logger::debug("router", "new lang: ". $newLang);
             //set new user lang to session
             $session = $dispatcher->getDI()->getSession();
             $session->set(LangService::STORED_SESSION_LANG, $newLang);
 
             //return right content
-			$this->redirectToLang($dispatcher, $newLang);
+            if ($isLanguageRoute) {
+                $this->redirectToLang($dispatcher, $newLang);
+            }
 		}
 
         //redirect to user lang
@@ -80,6 +87,7 @@ class LangRouter extends Router {
             && !$this->isVisitedByRobot()
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
+            Logger::debug("router", "redirect to user lang");
 			$langParam = $this->lang->getUserDefaultLanguage();
 			$this->redirectToLang($dispatcher, $langParam);
 		}
@@ -92,19 +100,26 @@ class LangRouter extends Router {
 
 		if (method_exists($controller, "getAlternativeLinkForLang")){
 			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
-			$response = $this->getDI()->getResponse()->redirect($arrayForLink);
-		} else {
-			$dispatcher->setParam('lang', $newLang);
-			$response = $this->getDI()->getResponse()->redirect([
-				self::LANG_PARAM => $newLang,
-				'for' => 'this'
-			]);
+            Logger::debug("router", $arrayForLink);
+            if ($arrayForLink!== null) {
+                $response = $this->getDI()->getResponse()->redirect($arrayForLink);
+                $response->send();
+                return;
+            }
 		}
+
+        $dispatcher->setParam('lang', $newLang);
+        $response = $this->getDI()->getResponse()->redirect([
+            self::LANG_PARAM => $newLang,
+            'for' => 'this'
+        ]);
+        $response->send();
+        return;
 		/*$headers = $response->getHeaders();
         $location = $headers->get("Location");
         $location = substr($location, 0, (strlen(self::SET_LANG_IN_URL)+strlen($newLang)+2)*(-1));
         $response->setHeader("Location", $location);*/
-		$response->send();
+
 	}
 
 	public function isVisitedByRobot() {
