@@ -61,7 +61,7 @@ class LangGroup extends \Phalcon\Mvc\Router\Group {
                 //translate parts of pattern
                 $pattern = strtr($route['route']['pattern'], $translationsForRoute);
                 //add route
-				$this->add('/'.$lang.'/' . $pattern, $route['route']['paths'])->setName($key."|".$lang);
+				$this->add('/{lang:'.$lang.'}/' . $pattern, $route['route']['paths'])->setName($key."|".$lang);
 				$this->translatedRoutes = $translations;
 			}
 		}

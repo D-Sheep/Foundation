@@ -53,38 +53,43 @@ class LangRouter extends Router {
 		$lang = $dispatcher->getParam(self::LANG_PARAM);
 		$route = $dispatcher->getDI()->getRouter()->getMatchedRoute();
 
-		if ($route !== null) {
-			$paths = $route->getPaths();
-			$isLanguageRoute = array_key_exists(self::LANG_PARAM, $paths);
-		} else {
-			$isLanguageRoute = false;
-		}
-
-		//$dispatcher->getActiveController() má interface mam hromadu jazyku (baseconstoler - metalang)
-		// jinak použiju this
+        //is lang param in route?
+        if ($route !== null) {
+            $paths = $route->getPaths();
+            $isLanguageRoute = array_key_exists(self::LANG_PARAM, $paths);
+        } else {
+            $isLanguageRoute = false;
+        }
 
 		$request = $dispatcher->getDI()->getRequest();
 		$queryParams = $request->getQuery();
+        //set new lang
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
-			$newLang =$queryParams[self::SET_LANG_IN_URL];
-			$this->redirectToLang($dispatcher, $newLang, true);
+
+            $newLang =$queryParams[self::SET_LANG_IN_URL];
+            //set new user lang to session
+            $session = $dispatcher->getDI()->getSession();
+            $session->set(LangService::STORED_SESSION_LANG, $newLang);
+
+            //return right content
+			$this->redirectToLang($dispatcher, $newLang);
 		}
 
-
+        //redirect to user lang
 		if ($isLanguageRoute
-			 && !$this->isVisitedByRobot()
+            && !$this->isVisitedByRobot()
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
 			$langParam = $this->lang->getUserDefaultLanguage();
-
 			$this->redirectToLang($dispatcher, $langParam);
 		}
 	}
 
-	private function redirectToLang(Dispatcher $dispatcher, $newLang, $setLangInSession = false){
+	private function redirectToLang(Dispatcher $dispatcher, $newLang){
 		//TODO je lang podporovaný? LangService->getAvailableLangs
 		//co dělat když neni podporovanej?
 		$controller = $dispatcher->getActiveController();
+
 		if (method_exists($controller, "getAlternativeLinkForLang")){
 			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
 			$response = $this->getDI()->getResponse()->redirect($arrayForLink);
@@ -94,10 +99,6 @@ class LangRouter extends Router {
 				self::LANG_PARAM => $newLang,
 				'for' => 'this'
 			]);
-		}
-		if ($setLangInSession) {
-			$session = $dispatcher->getDI()->getSession();
-			$session->set(LangService::STORED_SESSION_LANG, $newLang);
 		}
 		/*$headers = $response->getHeaders();
         $location = $headers->get("Location");
