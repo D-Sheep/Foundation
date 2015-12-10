@@ -51,7 +51,7 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
 
         foreach ($this->_data as $key => $value) {
             if ($value!=null) {
-                $this->cache->save($key,$value);
+                $this->cache->save($key, $value);
             }
         }
         $this->_data = null;
@@ -89,7 +89,8 @@ class SessionCacheAdapter implements \Phalcon\Session\AdapterInterface {
     {
         $this->is_started = true;
         $cacheFactory = $this->_di->getCacheFactory();
-        $this->cache = $cacheFactory->getCacheBackend("s_");
+        $sessionDir = $this->_di->getConfigurator()->getConfiguration()->sessions->filePath;
+        $this->cache = $cacheFactory->getCacheBackend("s_", null, $sessionDir);
     }
 
     /**
