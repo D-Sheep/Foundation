@@ -14,4 +14,4 @@ require 'Config/Configurator.php';
 require 'Router/Router.php';
 require 'Mvc/ApiController.php';
 
-const CACHE_MAX_LIFETIME = 518400;
+const CACHE_MAX_LIFETIME = 2592000;
