@@ -32,4 +32,8 @@ class Response extends \Foundation\HttpClient\GeneralMessage {
         return in_array($this->code, array(200, 201)) && (!$verifyJsonOkSign || !empty($this->postData["ok"]));
     }
 
+    public function isContinue() {
+        return ($this->code === 100);
+    }
+
 }
