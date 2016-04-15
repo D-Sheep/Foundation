@@ -75,7 +75,7 @@ class AssetsManager {
      * @param \Phalcon\Assets $assets
      */
     public function initialize($assets){
-        if($this->configurator->isDebug() && !$this->configurator->isTestingCache() ){
+        if(!$this->configurator->isProduction() && !$this->configurator->isTestingCache() ){
             $this->setCssAndJs($assets);
         //use as production
         } else {
