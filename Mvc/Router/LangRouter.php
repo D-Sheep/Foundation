@@ -66,6 +66,7 @@ class LangRouter extends Router {
         //set new lang
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
 
+
             $newLang =$queryParams[self::SET_LANG_IN_URL];
             //set new user lang to session
             $session = $dispatcher->getDI()->getSession();
@@ -95,6 +96,7 @@ class LangRouter extends Router {
 		if (method_exists($controller, "getAlternativeLinkForLang")){
 			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
             if ($arrayForLink!== null) {
+                $dispatcher->setParam('lang', $newLang);
                 $response = $this->getDI()->getResponse()->redirect($arrayForLink);
                 $response->send();
                 return;
