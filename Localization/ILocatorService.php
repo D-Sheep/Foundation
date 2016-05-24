@@ -16,4 +16,6 @@ interface ILocatorService {
 
     public function getUserCountry();
 
+    public function getDefaultLanguage();
+
 }
