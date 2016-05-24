@@ -25,13 +25,6 @@ class Url extends \Phalcon\Mvc\Url {
             $lang = null;
             if (isset($uri[LangRouter::LANG_PARAM])) $lang = $uri[LangRouter::LANG_PARAM];
             $route = $this->getDI()->getRouter()->getRouteByName($uri['for'], $lang);
-            Logger::info("localization", "-------------------");
-            Logger::info("localization", "-- \$uri['for']");
-            Logger::info("localization", $uri['for']);
-            Logger::info("localization", "-- lang");
-            Logger::info("localization", $lang);
-
-            Logger::info("localization", $route);
             if ($route === null){
                 return "notfound";
             } else {
