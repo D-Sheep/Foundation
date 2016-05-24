@@ -83,9 +83,9 @@ class LangRouter extends Router {
             && !$this->isVisitedByRobot()
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
-            Logger::debug("localization", "----langRouter...");
+            Logger::info("localization", "----langRouter...");
 			$langParam = $this->lang->getUserDefaultLanguage();
-            Logger::debug("localization", "lang: $lang");
+            Logger::info("localization", "lang: $lang");
 			$this->redirectToLang($dispatcher, $langParam);
 		}
 	}
@@ -98,8 +98,8 @@ class LangRouter extends Router {
 		if (method_exists($controller, "getAlternativeLinkForLang")){
 			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
             if ($arrayForLink!== null) {
-                Logger::debug("localization", "araryforlink:");
-                Logger::debug("localization", $$arrayForLink);
+                Logger::info("localization", "araryforlink:");
+                Logger::info("localization", $$arrayForLink);
                 $dispatcher->setParam('lang', $newLang);
                 $response = $this->getDI()->getResponse()->redirect($arrayForLink);
                 $response->send();
