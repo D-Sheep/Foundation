@@ -63,7 +63,7 @@ class LangRouter extends Router {
 
 		$request = $dispatcher->getDI()->getRequest();
 		$queryParams = $request->getQuery();
-        //set new lang
+        //set new lang from URL
 		if (isset($queryParams[self::SET_LANG_IN_URL]) && !$this->lang->isMatchingUserDefaultLanguage($queryParams[self::SET_LANG_IN_URL])){
 
 
@@ -83,7 +83,9 @@ class LangRouter extends Router {
             && !$this->isVisitedByRobot()
 			 && !$this->lang->isMatchingUserDefaultLanguage($lang)) {
 
+            Logger::debug("localization", "----langRouter...");
 			$langParam = $this->lang->getUserDefaultLanguage();
+            Logger::debug("localization", "lang: $lang");
 			$this->redirectToLang($dispatcher, $langParam);
 		}
 	}
@@ -96,6 +98,8 @@ class LangRouter extends Router {
 		if (method_exists($controller, "getAlternativeLinkForLang")){
 			$arrayForLink = $controller->getAlternativeLinkForLang($newLang);
             if ($arrayForLink!== null) {
+                Logger::debug("localization", "araryforlink:");
+                Logger::debug("localization", $$arrayForLink);
                 $dispatcher->setParam('lang', $newLang);
                 $response = $this->getDI()->getResponse()->redirect($arrayForLink);
                 $response->send();

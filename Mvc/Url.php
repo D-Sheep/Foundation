@@ -9,6 +9,7 @@
 
 namespace Foundation\Mvc;
 
+use Foundation\Logger;
 use Foundation\Mvc\Router\LangRouter;
 
 class Url extends \Phalcon\Mvc\Url {
@@ -24,6 +25,13 @@ class Url extends \Phalcon\Mvc\Url {
             $lang = null;
             if (isset($uri[LangRouter::LANG_PARAM])) $lang = $uri[LangRouter::LANG_PARAM];
             $route = $this->getDI()->getRouter()->getRouteByName($uri['for'], $lang);
+            Logger::debug("localization", "-------------------");
+            Logger::debug("localization", "-- \$uri['for']");
+            Logger::debug("localization", $uri['for']);
+            Logger::debug("localization", "-- lang");
+            Logger::debug("localization", $lang);
+
+            Logger::debug("localization", $route);
             if ($route === null){
                 return "notfound";
             } else {
