@@ -33,7 +33,7 @@ class Response extends \Foundation\HttpClient\GeneralMessage {
     }
 
     public function isContinue() {
-        return ($this->code === 100);
+        return ($this->code == 100);
     }
 
 }

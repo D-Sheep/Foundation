@@ -42,8 +42,12 @@ class MustachePartialsLoader implements \Mustache_Loader {
      */
     public function load($name, $stache = false)
     {
-        //Fisrt parameter is a real path to the template file
-        return $this->mustache->getCachedTemplate(APP_DIR . '/' . $name . '.mustache', $stache);
+        if (file_exists(APP_DIR . '/' . $name . '.mustache')) {
+            //Fisrt parameter is a real path to the template file
+            return $this->mustache->getCachedTemplate(APP_DIR . '/' . $name . '.mustache', $stache);
+        } else {
+            return $this->mustache->getCachedTemplate(APP_DIR . '/DefaultModule/views/' . $name . '.mustache', $stache);
+        }
     }
 
 

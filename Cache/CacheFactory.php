@@ -58,7 +58,7 @@ class CacheFactory {
             return $this->backends[$prefix];
         }
 
-        if ($this->type ===null -1){
+        if ($this->type === null){
             $this->detectType();
         }
 
