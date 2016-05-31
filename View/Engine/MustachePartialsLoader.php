@@ -42,6 +42,7 @@ class MustachePartialsLoader implements \Mustache_Loader {
      */
     public function load($name, $stache = false)
     {
+        $name = str_replace('../', '', $name); //canJS partials are referenced with a path relative to the route => normalize
         if (file_exists(APP_DIR . '/' . $name . '.mustache')) {
             //Fisrt parameter is a real path to the template file
             return $this->mustache->getCachedTemplate(APP_DIR . '/' . $name . '.mustache', $stache);
